@@ -1,0 +1,22 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TownSuite.MultiTenant", "TownSuite.MultiTenant\TownSuite.MultiTenant.csproj", "{8877A1E8-17AB-43E0-8DFB-EF4A2FBC76E9}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TownSuite.MultiTenant.Tests", "TownSuite.MultiTenant.Tests\TownSuite.MultiTenant.Tests.csproj", "{645428B1-1AFB-4500-BED9-067B7111CEC4}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{8877A1E8-17AB-43E0-8DFB-EF4A2FBC76E9}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{8877A1E8-17AB-43E0-8DFB-EF4A2FBC76E9}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{8877A1E8-17AB-43E0-8DFB-EF4A2FBC76E9}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{8877A1E8-17AB-43E0-8DFB-EF4A2FBC76E9}.Release|Any CPU.Build.0 = Release|Any CPU
+		{645428B1-1AFB-4500-BED9-067B7111CEC4}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{645428B1-1AFB-4500-BED9-067B7111CEC4}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{645428B1-1AFB-4500-BED9-067B7111CEC4}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{645428B1-1AFB-4500-BED9-067B7111CEC4}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+EndGlobal
