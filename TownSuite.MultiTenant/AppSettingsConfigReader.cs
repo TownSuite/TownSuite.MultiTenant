@@ -83,7 +83,7 @@ public class AppSettingsConfigReader : IConfigReader
 
         try
         {
-            string uniqueId = await _uniqueIdRetriever.GetUniqueId();
+            string uniqueId = await _uniqueIdRetriever.GetUniqueId(con);
 
             _connections.AddOrUpdate(uniqueId,
                 addValueFactory: (key) => new List<ConnectionStrings>() { con },
