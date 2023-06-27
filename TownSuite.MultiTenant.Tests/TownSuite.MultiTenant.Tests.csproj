@@ -23,7 +23,10 @@
     </ItemGroup>
 
     <ItemGroup>
-      <None Update="appsettings_appsettings_test.json">
+      <None Update="appsettings_reader_test.json">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </None>
+      <None Update="http_reader_test.json">
         <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
       </None>
     </ItemGroup>

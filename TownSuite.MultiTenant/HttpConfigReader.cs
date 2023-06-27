@@ -5,19 +5,22 @@ using Microsoft.Extensions.Logging;
 
 namespace TownSuite.MultiTenant;
 
-public class AppSettingsConfigReader : IConfigReader
+public class HttpConfigReader : IConfigReader
 {
     private readonly Microsoft.Extensions.Configuration.IConfiguration _configuration;
-    private readonly ILogger<AppSettingsConfigReader> _logger;
+    private readonly ILogger<HttpConfigReader> _logger;
     private readonly IUniqueIdRetriever _uniqueIdRetriever;
     ConcurrentDictionary<string, IList<ConnectionStrings>> _connections;
+    private TsWebClient _webClient;
 
-    public AppSettingsConfigReader(Microsoft.Extensions.Configuration.IConfiguration configuration,
-        ILogger<AppSettingsConfigReader> logger, IUniqueIdRetriever uniqueIdRetriever)
+    public HttpConfigReader(Microsoft.Extensions.Configuration.IConfiguration configuration,
+        ILogger<HttpConfigReader> logger, IUniqueIdRetriever uniqueIdRetriever,
+        TsWebClient webClient)
     {
         _configuration = configuration;
         _logger = logger;
         _uniqueIdRetriever = uniqueIdRetriever;
+        _webClient = webClient;
     }
 
     public virtual IList<ConnectionStrings> GetConnections(string tenant)
@@ -44,19 +47,24 @@ public class AppSettingsConfigReader : IConfigReader
     /// </summary>
     public virtual async Task Refresh()
     {
-        var connections = _configuration.GetSection("ConnectionStrings").GetChildren();
+        var configReaderUrl = _configuration.GetSection("TenantSettings__ConfigReaderUrl").Value;
         _connections = new ConcurrentDictionary<string, IList<ConnectionStrings>>();
+        
+        var tenants = await _webClient.GetAsync(configReaderUrl, System.Threading.CancellationToken.None);
         var conns = new List<ConnectionStrings>();
 
         string pattern = _configuration.GetSection("TenantSettings").GetSection("UniqueIdDbPattern").Value;
         string sql = _configuration.GetSection("TenantSettings").GetSection("SqlUniqueIdLookup").Value;
 
         var tasks = new List<Task>();
-        foreach (var connection in connections)
+        foreach (var tenant in tenants)
         {
-            var con = new ConnectionStrings() { Name = connection.Key, ConnStr = connection.Value };
-            conns.Add(con);
-            tasks.Add(InitializeUniqueIds(con, pattern, sql));
+            foreach (var connection in tenant.Connections)
+            {
+                var con = new ConnectionStrings() { Name = $"{tenant.TenantId}_{connection.Key}", ConnStr = connection.Value };
+                conns.Add(con);
+                tasks.Add(InitializeUniqueIds(con, pattern, sql));
+            }
         }
 
         foreach (var task in tasks)

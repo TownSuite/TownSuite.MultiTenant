@@ -4,7 +4,7 @@ using Moq;
 
 namespace TownSuite.MultiTenant.Tests;
 
-public class AppSettingsConfigReader_Tests
+public class HttpConfigReader_Tests
 {
     private IConfiguration config;
 
@@ -12,7 +12,7 @@ public class AppSettingsConfigReader_Tests
     public void Setup()
     {
         config = new ConfigurationBuilder()
-            .AddJsonFile("appsettings_reader_test.json")
+            .AddJsonFile("http_reader_test.json")
             .AddEnvironmentVariables()
             .Build();
     }
@@ -20,8 +20,10 @@ public class AppSettingsConfigReader_Tests
     [Test]
     public async Task Appsettings_Test()
     {
-        var logger = Mock.Of<ILogger<AppSettingsConfigReader>>();
-        var reader = new AppSettingsConfigReader(config, logger, new IdFaker());
+        var fakeHttpWebClient = new FakeHttpClient(new HttpClient(), "", "");
+        
+        var logger = Mock.Of<ILogger<HttpConfigReader>>();
+        var reader = new HttpConfigReader(config, logger, new IdFaker(), fakeHttpWebClient);
         await reader.Refresh();
         var tenantOneConnections = reader.GetConnections("tenant1");
 
@@ -30,7 +32,7 @@ public class AppSettingsConfigReader_Tests
             Is.EqualTo("PLACEHOLDER1"));
         Assert.That(tenantOneConnections.FirstOrDefault(p => p.Name == "tenant1_app2").ConnStr,
             Is.EqualTo("PLACEHOLDER2"));
-        Assert.That(tenantOneConnections.FirstOrDefault(p => p.Name == "a.dns.record.as.tenant.townsuite.com_app1").ConnStr,
+        Assert.That(tenantOneConnections.FirstOrDefault(p => p.Name == "tenant1_a.dns.record.as.tenant.townsuite.com_app1").ConnStr,
             Is.EqualTo("tenant 1 alias"));
         
         var tenantTwoConnections = reader.GetConnections("tenant2");
@@ -39,15 +41,17 @@ public class AppSettingsConfigReader_Tests
             Is.EqualTo("PLACEHOLDER3"));
         Assert.That(tenantTwoConnections.FirstOrDefault(p => p.Name == "tenant2_app2").ConnStr,
             Is.EqualTo("PLACEHOLDER4"));
-        Assert.That(tenantTwoConnections.FirstOrDefault(p => p.Name == "second.dns.record.as.tenant.townsuite.com_app1").ConnStr,
+        Assert.That(tenantTwoConnections.FirstOrDefault(p => p.Name == "tenant2_second.dns.record.as.tenant.townsuite.com_app1").ConnStr,
             Is.EqualTo("tenant 2 alias"));
     }
 
     [Test]
     public async Task WithTenantResolver_Test()
     {
-        var loggerAppSettings = Mock.Of<ILogger<AppSettingsConfigReader>>();
-        var reader = new AppSettingsConfigReader(config, loggerAppSettings, new IdFaker());
+        var fakeHttpWebClient = new FakeHttpClient(new HttpClient(), "", "");
+        
+        var logger = Mock.Of<ILogger<HttpConfigReader>>();
+        var reader = new HttpConfigReader(config, logger, new IdFaker(), fakeHttpWebClient);
         await reader.Refresh();
 
         var resolver = new TenantResolver(Mock.Of<ILogger<TenantResolver>>(), reader);

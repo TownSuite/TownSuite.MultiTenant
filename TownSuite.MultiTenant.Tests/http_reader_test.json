@@ -1,0 +1,15 @@
+{
+  "Logging": {
+    "LogLevel": {
+      "Default": "Debug",
+      "System": "Information",
+      "Microsoft": "Information"
+    }
+  },
+  "TenantSettings": {
+    "UniqueIdDbPattern": ".*_app1",
+    "SqlUniqueIdLookup": "SELECT TOP 1 [Id] FROM [dbo].[UniqueId] WHERE [Name] = @name",
+    "ConfigReaderUrl": "http://localhost:5000/api/ConfigReader",
+    "ConfigReaderUrlBearerToken": "PLACEHOLDER"
+  }
+}
