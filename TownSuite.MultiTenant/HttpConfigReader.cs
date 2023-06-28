@@ -36,7 +36,8 @@ public class HttpConfigReader : IConfigReader
     public virtual string GetConnection(string tenant, string appType)
     {
         var connectionString = _connections[tenant]
-            .FirstOrDefault(p => string.Equals(p.Name, appType, StringComparison.InvariantCultureIgnoreCase))?.ConnStr;
+            .FirstOrDefault(p => string.Equals(p.Name.Split("_").LastOrDefault(), appType,
+                StringComparison.InvariantCultureIgnoreCase))?.ConnStr;
 
         return connectionString ?? "";
     }
@@ -49,7 +50,7 @@ public class HttpConfigReader : IConfigReader
     {
         var configReaderUrl = _configuration.GetSection("TenantSettings__ConfigReaderUrl").Value;
         _connections = new ConcurrentDictionary<string, IList<ConnectionStrings>>();
-        
+
         var tenants = await _webClient.GetAsync(configReaderUrl, System.Threading.CancellationToken.None);
         var conns = new List<ConnectionStrings>();
 
@@ -61,7 +62,8 @@ public class HttpConfigReader : IConfigReader
         {
             foreach (var connection in tenant.Connections)
             {
-                var con = new ConnectionStrings() { Name = $"{tenant.TenantId}_{connection.Key}", ConnStr = connection.Value };
+                var con = new ConnectionStrings()
+                    { Name = $"{tenant.TenantId}_{connection.Key}", ConnStr = connection.Value };
                 conns.Add(con);
                 tasks.Add(InitializeUniqueIds(con, pattern, sql));
             }

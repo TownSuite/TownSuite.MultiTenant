@@ -55,4 +55,27 @@ public class AppSettingsConfigReader_Tests
         Assert.That(tenant.Connections.Count, Is.EqualTo(3));
         Assert.That(tenant.Connections.FirstOrDefault(p => p.Key == "tenant1_app1").Value, Is.EqualTo("PLACEHOLDER1"));
     }
+    
+    [Test]
+    public async Task IsSetup_Test()
+    {
+        var loggerAppSettings = Mock.Of<ILogger<AppSettingsConfigReader>>();
+        var reader = new AppSettingsConfigReader(config, loggerAppSettings, new IdFaker());
+
+        Assert.That(reader.IsSetup(), Is.EqualTo(false));
+        await reader.Refresh();
+        Assert.That(reader.IsSetup(), Is.EqualTo(true));
+    }
+    
+    [Test]
+    public async Task GetConnection_Test()
+    {
+        var loggerAppSettings = Mock.Of<ILogger<AppSettingsConfigReader>>();
+        var reader = new AppSettingsConfigReader(config, loggerAppSettings, new IdFaker());
+        await reader.Refresh();
+       
+        var connString = reader.GetConnection("tenant3", "app1");
+        Assert.That(connString, Is.EqualTo("PLACEHOLDER5"));
+    }
+    
 }

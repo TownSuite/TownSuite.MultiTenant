@@ -33,7 +33,8 @@ public class AppSettingsConfigReader : IConfigReader
     public virtual string GetConnection(string tenant, string appType)
     {
         var connectionString = _connections[tenant]
-            .FirstOrDefault(p => string.Equals(p.Name, appType, StringComparison.InvariantCultureIgnoreCase))?.ConnStr;
+            .FirstOrDefault(p => string.Equals(p.Name.Split("_").LastOrDefault(), appType,
+                StringComparison.InvariantCultureIgnoreCase))?.ConnStr;
 
         return connectionString ?? "";
     }

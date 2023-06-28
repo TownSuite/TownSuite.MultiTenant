@@ -21,7 +21,6 @@ public class HttpConfigReader_Tests
     public async Task Appsettings_Test()
     {
         var fakeHttpWebClient = new FakeHttpClient(new HttpClient(), "", "");
-        
         var logger = Mock.Of<ILogger<HttpConfigReader>>();
         var reader = new HttpConfigReader(config, logger, new IdFaker(), fakeHttpWebClient);
         await reader.Refresh();
@@ -49,7 +48,6 @@ public class HttpConfigReader_Tests
     public async Task WithTenantResolver_Test()
     {
         var fakeHttpWebClient = new FakeHttpClient(new HttpClient(), "", "");
-        
         var logger = Mock.Of<ILogger<HttpConfigReader>>();
         var reader = new HttpConfigReader(config, logger, new IdFaker(), fakeHttpWebClient);
         await reader.Refresh();
@@ -59,4 +57,28 @@ public class HttpConfigReader_Tests
         Assert.That(tenant.Connections.Count, Is.EqualTo(3));
         Assert.That(tenant.Connections.FirstOrDefault(p => p.Key == "tenant1_app1").Value, Is.EqualTo("PLACEHOLDER1"));
     }
+    
+    [Test]
+    public async Task IsSetup_Test()
+    {
+        var fakeHttpWebClient = new FakeHttpClient(new HttpClient(), "", "");
+        var logger = Mock.Of<ILogger<HttpConfigReader>>();
+        var reader = new HttpConfigReader(config, logger, new IdFaker(), fakeHttpWebClient);
+        Assert.That(reader.IsSetup(), Is.EqualTo(false));
+        await reader.Refresh();
+        Assert.That(reader.IsSetup(), Is.EqualTo(true));
+    }
+    
+    [Test]
+    public async Task GetConnection_Test()
+    {
+        var fakeHttpWebClient = new FakeHttpClient(new HttpClient(), "", "");
+        var logger = Mock.Of<ILogger<HttpConfigReader>>();
+        var reader = new HttpConfigReader(config, logger, new IdFaker(), fakeHttpWebClient);
+        await reader.Refresh();
+       
+        var connString = reader.GetConnection("tenant3", "app1");
+        Assert.That(connString, Is.EqualTo("PLACEHOLDER5"));
+    }
+    
 }
