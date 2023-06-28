@@ -1,0 +1,31 @@
+name: .NET
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  linux-build:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v3
+    - name: Setup .NET
+      uses: actions/setup-dotnet@v3
+      with:
+        dotnet-version: 6.0.x
+    - name: Restore dependencies
+      run: dotnet restore TownSuite.MultiTenant.sln
+    - name: Build
+      run: dotnet build TownSuite.MultiTenant.sln --no-restore -c Release
+    - name: Test
+      run: cwd=`pwd` && dotnet vstest "TownSuite.MultiTenant.Tests/bin/Release/net6.0/TownSuite.MultiTenant.Tests.dll" --logger:"trx;LogFileName=$cwd/TownSuite.MultiTenant.Tests/bin/Release/net6.0/nunit-result.trx"
+    - name: Archive test results
+      uses: actions/upload-artifact@v3
+      with:
+        name: test-results
+        path: |
+          TownSuite.MultiTenant.Tests/bin/Release/net6.0/nunit-result.trx
+        retention-days: 1
+
