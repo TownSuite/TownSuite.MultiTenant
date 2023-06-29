@@ -4,6 +4,10 @@
         <TargetFramework>net6.0</TargetFramework>
         <ImplicitUsings>enable</ImplicitUsings>
         <Nullable>enable</Nullable>
+        <PackageId>TownSuite.MultiTenant</PackageId>
+        <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+        <Version>1.0.0</Version>
+        <Description>A small dotnet library to assist in single instance applications with multi tenant databases.</Description>
     </PropertyGroup>
 
     <ItemGroup>
