@@ -5,32 +5,21 @@ using Microsoft.Extensions.Logging;
 
 namespace TownSuite.MultiTenant;
 
-public class AppSettingsConfigReader : IConfigReader
+public class AppSettingsConfigReader : ConfigReader
 {
     private readonly Microsoft.Extensions.Configuration.IConfiguration _configuration;
     private readonly ILogger<AppSettingsConfigReader> _logger;
     private readonly IUniqueIdRetriever _uniqueIdRetriever;
-    ConcurrentDictionary<string, IList<ConnectionStrings>> _connections;
 
     public AppSettingsConfigReader(Microsoft.Extensions.Configuration.IConfiguration configuration,
-        ILogger<AppSettingsConfigReader> logger, IUniqueIdRetriever uniqueIdRetriever)
+        ILogger<AppSettingsConfigReader> logger, IUniqueIdRetriever uniqueIdRetriever) : base(uniqueIdRetriever)
     {
         _configuration = configuration;
         _logger = logger;
         _uniqueIdRetriever = uniqueIdRetriever;
     }
-
-    public virtual IList<ConnectionStrings> GetConnections(string tenant)
-    {
-        return _connections[tenant];
-    }
-
-    public bool IsSetup()
-    {
-        return _connections != null && _connections.Any();
-    }
-
-    public virtual string GetConnection(string tenant, string appType)
+    
+    public override string GetConnection(string tenant, string appType)
     {
         var connectionString = _connections[tenant]
             .FirstOrDefault(p => string.Equals(p.Name.Split("_").LastOrDefault(), appType,
@@ -43,7 +32,7 @@ public class AppSettingsConfigReader : IConfigReader
     /// The Refresh method will load the data.   This should be called by middleware on startup and can be called manually if needed.
     /// This method should be called before the GetConnection method is called.
     /// </summary>
-    public virtual async Task Refresh()
+    public override async Task Refresh()
     {
         var connections = _configuration.GetSection("ConnectionStrings").GetChildren();
         _connections = new ConcurrentDictionary<string, IList<ConnectionStrings>>();
@@ -65,72 +54,14 @@ public class AppSettingsConfigReader : IConfigReader
             await task;
         }
 
-        GroupDatabasesByTenant(conns);
-    }
-
-    private async Task InitializeUniqueIds(ConnectionStrings con, string pattern)
-    {
-        string? tenant = con.Name.Split("_").FirstOrDefault();
-        if (string.IsNullOrWhiteSpace(tenant))
+        if (Exceptions.Any())
         {
-            return;
-        }
-
-        Match m = Regex.Match(con.Name, pattern, RegexOptions.IgnoreCase);
-        if (!m.Success)
-        {
-            return;
-        }
-
-        try
-        {
-            string uniqueId = await _uniqueIdRetriever.GetUniqueId(con);
-
-            _connections.AddOrUpdate(uniqueId,
-                addValueFactory: (key) => new List<ConnectionStrings>() { con },
-                updateValueFactory: (s, list) =>
-                {
-                    list.Add(con);
-                    return list;
-                });
-        }
-        catch (Exception ex)
-        {
-            _logger.LogCritical(
-                $"Failed to resolve and initialize tenant {con.Name}.",
-                ex);
-        }
-    }
-
-    private void GroupDatabasesByTenant(List<ConnectionStrings> conns)
-    {
-        // This method will find all connection strings that follow the {tenant/alias}_{name/dbType} pattern
-        // that were not found to match the DatabaseWithUniqueId pattern
-        // and add them to the _connections dictionary with the UniqueId as the key.
-
-        foreach (var con in conns)
-        {
-            string conTenantOrAlias = con.Name.Split("_").FirstOrDefault();
-
-            foreach (var tenantKey in _connections.Keys)
+            foreach(var ex in Exceptions)
             {
-                var found = _connections[tenantKey].Any(c =>
-                    string.Equals(c.Name.Split("_").FirstOrDefault(),
-                        conTenantOrAlias, StringComparison.InvariantCultureIgnoreCase));
-
-                if (!found)
-                {
-                    continue;
-                }
-
-                _connections.AddOrUpdate(tenantKey,
-                    addValueFactory: (key) => new List<ConnectionStrings>() { con },
-                    updateValueFactory: (s, list) =>
-                    {
-                        if (!list.Contains(con)) list.Add(con);
-                        return list;
-                    });
+                _logger.LogError(ex.Message, ex);
             }
         }
+
+        GroupDatabasesByTenant(conns);
     }
 }
