@@ -48,36 +48,40 @@ public class HttpConfigReader : IConfigReader
     /// </summary>
     public virtual async Task Refresh()
     {
-        var configReaderUrl = _configuration.GetSection("TenantSettings__ConfigReaderUrl").Value;
+        var configReaderUrls =
+            _configuration.GetSection("TenantSettings").GetSection("ConfigReaderUrl").Get<string[]>();
         _connections = new ConcurrentDictionary<string, IList<ConnectionStrings>>();
 
-        var tenants = await _webClient.GetAsync(configReaderUrl, System.Threading.CancellationToken.None);
-        var conns = new List<ConnectionStrings>();
-
-        string pattern = _configuration.GetSection("TenantSettings").GetSection("UniqueIdDbPattern").Value;
-        string sql = _configuration.GetSection("TenantSettings").GetSection("SqlUniqueIdLookup").Value;
-
-        var tasks = new List<Task>();
-        foreach (var tenant in tenants)
+        foreach (var configReaderUrl in configReaderUrls)
         {
-            foreach (var connection in tenant.Connections)
+            var tenants = await _webClient.GetAsync(configReaderUrl, System.Threading.CancellationToken.None);
+            var conns = new List<ConnectionStrings>();
+
+            string pattern = _configuration.GetSection("TenantSettings").GetSection("UniqueIdDbPattern").Value;
+            string sql = _configuration.GetSection("TenantSettings").GetSection("SqlUniqueIdLookup").Value;
+
+            var tasks = new List<Task>();
+            foreach (var tenant in tenants)
             {
-                var con = new ConnectionStrings()
-                    { Name = $"{tenant.TenantId}_{connection.Key}", ConnStr = connection.Value };
-                conns.Add(con);
-                tasks.Add(InitializeUniqueIds(con, pattern, sql));
+                foreach (var connection in tenant.Connections)
+                {
+                    var con = new ConnectionStrings()
+                        { Name = $"{tenant.TenantId}_{connection.Key}", ConnStr = connection.Value };
+                    conns.Add(con);
+                    tasks.Add(InitializeUniqueIds(con, pattern));
+                }
             }
-        }
 
-        foreach (var task in tasks)
-        {
-            await task;
-        }
+            foreach (var task in tasks)
+            {
+                await task;
+            }
 
-        GroupDatabasesByTenant(conns);
+            GroupDatabasesByTenant(conns);
+        }
     }
 
-    private async Task InitializeUniqueIds(ConnectionStrings con, string pattern, string sql)
+    private async Task InitializeUniqueIds(ConnectionStrings con, string pattern)
     {
         string? tenant = con.Name.Split("_").FirstOrDefault();
         if (string.IsNullOrWhiteSpace(tenant))
@@ -95,13 +99,7 @@ public class HttpConfigReader : IConfigReader
         {
             string uniqueId = await _uniqueIdRetriever.GetUniqueId(con);
 
-            _connections.AddOrUpdate(uniqueId,
-                addValueFactory: (key) => new List<ConnectionStrings>() { con },
-                updateValueFactory: (s, list) =>
-                {
-                    list.Add(con);
-                    return list;
-                });
+            AddOrUpdateCons(con, uniqueId);
         }
         catch (Exception ex)
         {
@@ -109,6 +107,28 @@ public class HttpConfigReader : IConfigReader
                 $"Failed to resolve and initialize tenant {con.Name}.",
                 ex);
         }
+    }
+
+    private void AddOrUpdateCons(ConnectionStrings con, string uniqueId)
+    {
+        _connections.AddOrUpdate(uniqueId,
+            addValueFactory: (key) => new List<ConnectionStrings>() { con },
+            updateValueFactory: (s, list) =>
+            {
+                if (!list.Any(p => string.Equals(p.Name, con.Name, StringComparison.InvariantCultureIgnoreCase)))
+                {
+                    list.Add(con);
+                }
+                else
+                {
+                    var tmp = list.FirstOrDefault(p =>
+                        string.Equals(p.Name, con.Name, StringComparison.InvariantCultureIgnoreCase));
+
+                    tmp.ChangeConnStr(con.ConnStr);
+                }
+                
+                return list;
+            });
     }
 
     private void GroupDatabasesByTenant(List<ConnectionStrings> conns)
@@ -132,13 +152,7 @@ public class HttpConfigReader : IConfigReader
                     continue;
                 }
 
-                _connections.AddOrUpdate(tenantKey,
-                    addValueFactory: (key) => new List<ConnectionStrings>() { con },
-                    updateValueFactory: (s, list) =>
-                    {
-                        if (!list.Contains(con)) list.Add(con);
-                        return list;
-                    });
+                AddOrUpdateCons(con, tenantKey);
             }
         }
     }

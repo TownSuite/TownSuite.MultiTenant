@@ -57,7 +57,7 @@ public class AppSettingsConfigReader : IConfigReader
         {
             var con = new ConnectionStrings() { Name = connection.Key, ConnStr = connection.Value };
             conns.Add(con);
-            tasks.Add(InitializeUniqueIds(con, pattern, sql));
+            tasks.Add(InitializeUniqueIds(con, pattern));
         }
 
         foreach (var task in tasks)
@@ -68,7 +68,7 @@ public class AppSettingsConfigReader : IConfigReader
         GroupDatabasesByTenant(conns);
     }
 
-    private async Task InitializeUniqueIds(ConnectionStrings con, string pattern, string sql)
+    private async Task InitializeUniqueIds(ConnectionStrings con, string pattern)
     {
         string? tenant = con.Name.Split("_").FirstOrDefault();
         if (string.IsNullOrWhiteSpace(tenant))
