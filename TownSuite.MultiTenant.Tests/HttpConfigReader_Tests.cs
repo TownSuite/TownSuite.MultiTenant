@@ -96,6 +96,7 @@ public class HttpConfigReader_Tests
         var fakeHttpWebClient = new FakeHttpClient(new HttpClient(), "", "");
         var logger = Mock.Of<ILogger<HttpConfigReader>>();
         var reader = new HttpConfigReader(config, logger, new IdFaker(), fakeHttpWebClient);
+        reader.Clear();
         Assert.That(reader.IsSetup(), Is.EqualTo(false));
         await reader.Refresh();
         Assert.That(reader.IsSetup(), Is.EqualTo(true));

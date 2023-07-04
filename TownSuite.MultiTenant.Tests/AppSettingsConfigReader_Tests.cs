@@ -91,6 +91,7 @@ public class AppSettingsConfigReader_Tests
         var loggerAppSettings = Mock.Of<ILogger<AppSettingsConfigReader>>();
         var reader = new AppSettingsConfigReader(config, loggerAppSettings, new IdFaker());
 
+        reader.Clear();
         Assert.That(reader.IsSetup(), Is.EqualTo(false));
         await reader.Refresh();
         Assert.That(reader.IsSetup(), Is.EqualTo(true));

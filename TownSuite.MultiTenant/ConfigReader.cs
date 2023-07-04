@@ -3,9 +3,14 @@ using System.Text.RegularExpressions;
 
 namespace TownSuite.MultiTenant;
 
+/// <summary>
+/// Internally the data is only loaded once and then cached across all instances.  The Refresh method will load the data.
+/// This should be called by middleware on startup and can be called manually if needed.
+/// Additionally if the cache should be cleared but not reloaded the Clear method can be called.
+/// </summary>
 public abstract class ConfigReader : IConfigReader
 {
-    protected ConcurrentDictionary<string, IList<ConnectionStrings>> _connections;
+    protected static ConcurrentDictionary<string, IList<ConnectionStrings>> _connections;
     private readonly IUniqueIdRetriever _uniqueIdRetriever;
 
     private TsWebClient _webClient;
@@ -25,11 +30,21 @@ public abstract class ConfigReader : IConfigReader
     public abstract string GetConnection(string tenant, string appType);
 
     /// <summary>
-    /// Return a list of all connections.
+    /// Internally the data is only loaded once and then cached across all instances.
+    /// The Refresh method will load the data.
+    /// This should be called by middleware on startup and can be called manually if needed.
     /// </summary>
     /// <returns>key=UniqueTenantId</returns>
     public abstract Task Refresh();
 
+    
+    /// <summary>
+    /// The cache should be cleared but not reloaded the Clear method can be called.
+    /// </summary>
+    public void Clear()
+    {
+        _connections.Clear();
+    }
     public bool IsSetup()
     {
         return _connections != null && _connections.Any();
