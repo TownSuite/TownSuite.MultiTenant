@@ -16,7 +16,7 @@ public class TsWebClient
         _bearerToken = bearerToken;
         _userAgent = userAgent;
     }
-
+    
     void PrepareRequest(System.Net.Http.HttpClient client, System.Net.Http.HttpRequestMessage request, string url)
     {
         request.Headers.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", _bearerToken);
@@ -117,7 +117,7 @@ public class TsWebClient
         
         try
         {
-            using (var responseStream = await response.Content.ReadAsStreamAsync().ConfigureAwait(false))
+            using (var responseStream = await response.Content.ReadAsStreamAsync(cancellationToken).ConfigureAwait(false))
             {
                 var typedBody = JsonSerializer.Deserialize<T>(responseStream);
                 return new ObjectResponseResult<T>(typedBody, string.Empty);
