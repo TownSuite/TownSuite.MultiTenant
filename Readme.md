@@ -34,7 +34,7 @@ Read tenant information from a appsettings.json file.
     "tenant2_app1": "Server=tcp:myserver.example.townsuite.com,1433;Initial Catalog=mydatabase2;Persist Security Info=False;User ID=myuser;Password=mypassword;MultipleActiveResultSets=False;Encrypt=True;TrustServerCertificate=False;Connection Timeout=30;"
   },
   "TenantSettings": {
-    "DatabaseWithUniqueId": ".*_Web",
+    "UniqueIdDbPattern": ".*_Web",
     "SqlUniqueIdLookup": "SELECT Top 1 Id FROM ExampleTable"
   }
 }
@@ -104,7 +104,7 @@ Settings that are required to make an http call and read the output
 ```json
 {
   "TenantSettings": {
-    "DatabaseWithUniqueId": ".*_Web",
+    "UniqueIdDbPattern": ".*_Web",
     "SqlUniqueIdLookup": "SELECT Top 1 Id FROM ExampleTable",
     "ConfigReaderUrl": [
       "http://localhost:5000/api/ConfigReader",
