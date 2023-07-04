@@ -66,16 +66,16 @@ public class TenantResolver
         return t;
     }
 
-    public async Task<Tenant> Resolve(string tenantId, bool reset = false)
+    public async Task<Tenant> ResolveAsync(string tenantId, bool reset = false)
     {
         if (string.IsNullOrWhiteSpace(tenantId))
         {
             return null;
         }
 
-        if (_tenants.ContainsKey(tenantId) && reset == false)
+        if (reset == false && _tenants.TryGetValue(tenantId, out var async))
         {
-            return _tenants[tenantId];
+            return async;
         }
 
         if (!_reader.IsSetup())
@@ -83,6 +83,11 @@ public class TenantResolver
             await _reader.Refresh();
         }
 
+        return SetupTenant(tenantId, reset);
+    }
+
+    private Tenant SetupTenant(string tenantId, bool reset)
+    {
         var connections = _reader.GetConnections(tenantId);
 
         var t = new Tenant(tenantId);
@@ -106,9 +111,22 @@ public class TenantResolver
 
             return t;
         }
+        
+        return ModifyTenantDictionary(tenantId, reset, t) as Tenant;
+    }
 
-        t = ModifyTenantDictionary(tenantId, reset, t) as Tenant;
+    public Tenant Resolve(string tenantId)
+    {
+        if (string.IsNullOrWhiteSpace(tenantId))
+        {
+            return null;
+        }
 
-        return t;
+        if (_tenants.TryGetValue(tenantId, out var resolve))
+        {
+            return resolve;
+        }
+
+        return SetupTenant(tenantId, reset: false);
     }
 }
