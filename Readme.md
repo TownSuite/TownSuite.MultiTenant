@@ -29,12 +29,11 @@ Read tenant information from a appsettings.json file.
     "tenant1_app1": "Server=tcp:myserver.example.townsuite.com,1433;Initial Catalog=mydatabase1;Persist Security Info=False;User ID=myuser;Password=mypassword;MultipleActiveResultSets=False;Encrypt=True;TrustServerCertificate=False;Connection Timeout=30;",
     "alias1_app1": "Server=tcp:myserver.example.townsuite.com,1433;Initial Catalog=mydatabase1;Persist Security Info=False;User ID=myuser;Password=mypassword;MultipleActiveResultSets=False;Encrypt=True;TrustServerCertificate=False;Connection Timeout=30;",
     "alias2_app1": "Server=tcp:myserver.example.townsuite.com,1433;Initial Catalog=mydatabase1;Persist Security Info=False;User ID=myuser;Password=mypassword;MultipleActiveResultSets=False;",
-    "tenant1_app2": "Server=tcp:myserver.example.townsuite.com,1433;Initial Catalog=second1;Persist Security Info=False;User ID=myuser;Password=mypassword;MultipleActiveResultSets=False;
-    Encrypt=True;TrustServerCertificate=False;Connection Timeout=30;",
+    "tenant1_app2": "Server=tcp:myserver.example.townsuite.com,1433;Initial Catalog=second1;Persist Security Info=False;User ID=myuser;Password=mypassword;MultipleActiveResultSets=False;Encrypt=True;TrustServerCertificate=False;Connection Timeout=30;",
     "a.site.example.townsuite.com_app1": "Server=tcp:myserver.example.townsuite.com,1433;Initial Catalog=mydatabase1;Persist Security Info=False;User ID=myuser;Password=mypassword;MultipleActiveResultSets=False;Encrypt=True;TrustServerCertificate=False;Connection Timeout=30;",
     "tenant2_app1": "Server=tcp:myserver.example.townsuite.com,1433;Initial Catalog=mydatabase2;Persist Security Info=False;User ID=myuser;Password=mypassword;MultipleActiveResultSets=False;Encrypt=True;TrustServerCertificate=False;Connection Timeout=30;"
   },
-  "TenantSettings"{
+  "TenantSettings": {
     "DatabaseWithUniqueId": ".*_Web",
     "SqlUniqueIdLookup": "SELECT Top 1 Id FROM ExampleTable"
   }
@@ -104,7 +103,7 @@ public class ExampleController : ControllerBase
 Settings that are required to make an http call and read the output
 ```json
 {
-  "TenantSettings"{
+  "TenantSettings": {
     "DatabaseWithUniqueId": ".*_Web",
     "SqlUniqueIdLookup": "SELECT Top 1 Id FROM ExampleTable",
     "ConfigReaderUrl": [
