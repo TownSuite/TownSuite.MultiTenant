@@ -7,6 +7,7 @@ namespace TownSuite.MultiTenant.Tests;
 public class HttpConfigReader_Tests
 {
     private IConfiguration config;
+    private Settings settings;
 
     [SetUp]
     public void Setup()
@@ -15,6 +16,16 @@ public class HttpConfigReader_Tests
             .AddJsonFile("http_reader_test.json")
             .AddEnvironmentVariables()
             .Build();
+
+        string pattern = config.GetSection("TenantSettings").GetSection("UniqueIdDbPattern").Value;
+        string sql = config.GetSection("TenantSettings").GetSection("SqlUniqueIdLookup").Value;
+        string decryptionKey = config.GetSection("TenantSettings").GetSection("DecryptionKey").Value;
+        settings = new Settings()
+        {
+            UniqueIdDbPattern = pattern,
+            DecryptionKey = decryptionKey,
+            ConfigReaderUrls = config.GetSection("TenantSettings").GetSection("ConfigReaderUrl").Get<string[]>()
+        };
     }
 
     [Test]
@@ -22,7 +33,7 @@ public class HttpConfigReader_Tests
     {
         var fakeHttpWebClient = new FakeHttpClient(new HttpClient(), "", "");
         var logger = Mock.Of<ILogger<HttpConfigReader>>();
-        var reader = new HttpConfigReader(config, logger, new IdFaker(), fakeHttpWebClient);
+        var reader = new HttpConfigReader(config, logger, new IdFaker(), fakeHttpWebClient, settings);
         await reader.Refresh();
         var tenantOneConnections = reader.GetConnections("tenant1");
 
@@ -53,7 +64,7 @@ public class HttpConfigReader_Tests
     {
         var fakeHttpWebClient = new FakeHttpClient(new HttpClient(), "", "");
         var logger = Mock.Of<ILogger<HttpConfigReader>>();
-        var reader = new HttpConfigReader(config, logger, new IdFaker(), fakeHttpWebClient);
+        var reader = new HttpConfigReader(config, logger, new IdFaker(), fakeHttpWebClient, settings);
         await reader.Refresh();
 
         var resolver = new TenantResolver(Mock.Of<ILogger<TenantResolver>>(), reader);
@@ -61,13 +72,13 @@ public class HttpConfigReader_Tests
         Assert.That(tenant.Connections.Count, Is.EqualTo(3));
         Assert.That(tenant.Connections.FirstOrDefault(p => p.Key == "tenant1_app1").Value, Is.EqualTo("PLACEHOLDER1"));
     }
-    
+
     [Test]
     public async Task WithTenantResolverAsyncReset_Test()
     {
         var fakeHttpWebClient = new FakeHttpClient(new HttpClient(), "", "");
         var logger = Mock.Of<ILogger<HttpConfigReader>>();
-        var reader = new HttpConfigReader(config, logger, new IdFaker(), fakeHttpWebClient);
+        var reader = new HttpConfigReader(config, logger, new IdFaker(), fakeHttpWebClient, settings);
         await reader.Refresh();
 
         var resolver = new TenantResolver(Mock.Of<ILogger<TenantResolver>>(), reader);
@@ -81,7 +92,7 @@ public class HttpConfigReader_Tests
     {
         var fakeHttpWebClient = new FakeHttpClient(new HttpClient(), "", "");
         var logger = Mock.Of<ILogger<HttpConfigReader>>();
-        var reader = new HttpConfigReader(config, logger, new IdFaker(), fakeHttpWebClient);
+        var reader = new HttpConfigReader(config, logger, new IdFaker(), fakeHttpWebClient, settings);
         await reader.Refresh();
 
         var resolver = new TenantResolver(Mock.Of<ILogger<TenantResolver>>(), reader);
@@ -95,7 +106,7 @@ public class HttpConfigReader_Tests
     {
         var fakeHttpWebClient = new FakeHttpClient(new HttpClient(), "", "");
         var logger = Mock.Of<ILogger<HttpConfigReader>>();
-        var reader = new HttpConfigReader(config, logger, new IdFaker(), fakeHttpWebClient);
+        var reader = new HttpConfigReader(config, logger, new IdFaker(), fakeHttpWebClient, settings);
         reader.Clear();
         Assert.That(reader.IsSetup(), Is.EqualTo(false));
         await reader.Refresh();
@@ -107,7 +118,7 @@ public class HttpConfigReader_Tests
     {
         var fakeHttpWebClient = new FakeHttpClient(new HttpClient(), "", "");
         var logger = Mock.Of<ILogger<HttpConfigReader>>();
-        var reader = new HttpConfigReader(config, logger, new IdFaker(), fakeHttpWebClient);
+        var reader = new HttpConfigReader(config, logger, new IdFaker(), fakeHttpWebClient, settings);
         await reader.Refresh();
 
         var connString = reader.GetConnection("tenant3", "app1");

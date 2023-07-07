@@ -7,6 +7,7 @@ namespace TownSuite.MultiTenant.Tests;
 public class AppSettingsConfigReader_Tests
 {
     private IConfiguration config;
+    private Settings settings;
 
     [SetUp]
     public void Setup()
@@ -15,13 +16,22 @@ public class AppSettingsConfigReader_Tests
             .AddJsonFile("appsettings_reader_test.json")
             .AddEnvironmentVariables()
             .Build();
+
+        string pattern = config.GetSection("TenantSettings").GetSection("UniqueIdDbPattern").Value;
+        string sql = config.GetSection("TenantSettings").GetSection("SqlUniqueIdLookup").Value;
+        string decryptionKey = config.GetSection("TenantSettings").GetSection("DecryptionKey").Value;
+        settings = new Settings()
+        {
+            UniqueIdDbPattern = pattern,
+            DecryptionKey = decryptionKey
+        };
     }
 
     [Test]
     public async Task Appsettings_Test()
     {
         var logger = Mock.Of<ILogger<AppSettingsConfigReader>>();
-        var reader = new AppSettingsConfigReader(config, logger, new IdFaker());
+        var reader = new AppSettingsConfigReader(config, logger, new IdFaker(), settings);
         await reader.Refresh();
         var tenantOneConnections = reader.GetConnections("tenant1");
 
@@ -50,7 +60,7 @@ public class AppSettingsConfigReader_Tests
     public async Task WithTenantResolverAsync_Test()
     {
         var loggerAppSettings = Mock.Of<ILogger<AppSettingsConfigReader>>();
-        var reader = new AppSettingsConfigReader(config, loggerAppSettings, new IdFaker());
+        var reader = new AppSettingsConfigReader(config, loggerAppSettings, new IdFaker(), settings);
         await reader.Refresh();
 
         var resolver = new TenantResolver(Mock.Of<ILogger<TenantResolver>>(), reader);
@@ -63,7 +73,7 @@ public class AppSettingsConfigReader_Tests
     public async Task WithTenantResolverAsyncRest_Test()
     {
         var loggerAppSettings = Mock.Of<ILogger<AppSettingsConfigReader>>();
-        var reader = new AppSettingsConfigReader(config, loggerAppSettings, new IdFaker());
+        var reader = new AppSettingsConfigReader(config, loggerAppSettings, new IdFaker(), settings);
         await reader.Refresh();
 
         var resolver = new TenantResolver(Mock.Of<ILogger<TenantResolver>>(), reader);
@@ -76,7 +86,7 @@ public class AppSettingsConfigReader_Tests
     public async Task WithTenantResolver_Test()
     {
         var loggerAppSettings = Mock.Of<ILogger<AppSettingsConfigReader>>();
-        var reader = new AppSettingsConfigReader(config, loggerAppSettings, new IdFaker());
+        var reader = new AppSettingsConfigReader(config, loggerAppSettings, new IdFaker(), settings);
         await reader.Refresh();
 
         var resolver = new TenantResolver(Mock.Of<ILogger<TenantResolver>>(), reader);
@@ -89,7 +99,7 @@ public class AppSettingsConfigReader_Tests
     public async Task IsSetup_Test()
     {
         var loggerAppSettings = Mock.Of<ILogger<AppSettingsConfigReader>>();
-        var reader = new AppSettingsConfigReader(config, loggerAppSettings, new IdFaker());
+        var reader = new AppSettingsConfigReader(config, loggerAppSettings, new IdFaker(), settings);
 
         reader.Clear();
         Assert.That(reader.IsSetup(), Is.EqualTo(false));
@@ -101,7 +111,7 @@ public class AppSettingsConfigReader_Tests
     public async Task GetConnection_Test()
     {
         var loggerAppSettings = Mock.Of<ILogger<AppSettingsConfigReader>>();
-        var reader = new AppSettingsConfigReader(config, loggerAppSettings, new IdFaker());
+        var reader = new AppSettingsConfigReader(config, loggerAppSettings, new IdFaker(), settings);
         await reader.Refresh();
 
         var connString = reader.GetConnection("tenant3", "app1");

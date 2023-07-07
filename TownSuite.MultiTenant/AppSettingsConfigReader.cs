@@ -12,13 +12,14 @@ public class AppSettingsConfigReader : ConfigReader
     private readonly IUniqueIdRetriever _uniqueIdRetriever;
 
     public AppSettingsConfigReader(Microsoft.Extensions.Configuration.IConfiguration configuration,
-        ILogger<AppSettingsConfigReader> logger, IUniqueIdRetriever uniqueIdRetriever) : base(uniqueIdRetriever)
+        ILogger<AppSettingsConfigReader> logger, IUniqueIdRetriever uniqueIdRetriever,
+        Settings settings) : base(uniqueIdRetriever, settings)
     {
         _configuration = configuration;
         _logger = logger;
         _uniqueIdRetriever = uniqueIdRetriever;
     }
-    
+
     public override string GetConnection(string tenant, string appType)
     {
         var connectionString = _connections[tenant]
@@ -38,13 +39,12 @@ public class AppSettingsConfigReader : ConfigReader
         _connections = new ConcurrentDictionary<string, IList<ConnectionStrings>>();
         var conns = new List<ConnectionStrings>();
 
-        string pattern = _configuration.GetSection("TenantSettings").GetSection("UniqueIdDbPattern").Value;
-        string sql = _configuration.GetSection("TenantSettings").GetSection("SqlUniqueIdLookup").Value;
-
+        string pattern = _settings.UniqueIdDbPattern;
+        
         var tasks = new List<Task>();
         foreach (var connection in connections)
         {
-            var con = new ConnectionStrings() { Name = connection.Key, ConnStr = connection.Value };
+            var con = new ConnectionStrings(_settings.DecryptionKey) { Name = connection.Key, ConnStr = connection.Value };
             conns.Add(con);
             tasks.Add(InitializeUniqueIds(con, pattern));
         }
@@ -56,7 +56,7 @@ public class AppSettingsConfigReader : ConfigReader
 
         if (Exceptions.Any())
         {
-            foreach(var ex in Exceptions)
+            foreach (var ex in Exceptions)
             {
                 _logger.LogError(ex.Message, ex);
             }

@@ -13,6 +13,7 @@
       "http://localhost:5000/api/ConfigReader",
       "https://localhost:5001/api/ConfigReader"
     ],
-    "ConfigReaderUrlBearerToken": "PLACEHOLDER"
+    "ConfigReaderUrlBearerToken": "PLACEHOLDER",
+    "DecryptionKey": ""
   }
 }

@@ -12,14 +12,16 @@ public abstract class ConfigReader : IConfigReader
 {
     protected static ConcurrentDictionary<string, IList<ConnectionStrings>> _connections;
     private readonly IUniqueIdRetriever _uniqueIdRetriever;
+    protected readonly Settings _settings;
 
     private TsWebClient _webClient;
 
     public List<Exception> Exceptions { get; private set; } = new List<Exception>();
 
-    protected ConfigReader(IUniqueIdRetriever uniqueIdRetriever)
+    protected ConfigReader(IUniqueIdRetriever uniqueIdRetriever, Settings settings)
     {
         _uniqueIdRetriever = uniqueIdRetriever;
+        _settings = settings;
     }
 
     public IList<ConnectionStrings> GetConnections(string tenant)
@@ -37,7 +39,7 @@ public abstract class ConfigReader : IConfigReader
     /// <returns>key=UniqueTenantId</returns>
     public abstract Task Refresh();
 
-    
+
     /// <summary>
     /// The cache should be cleared but not reloaded the Clear method can be called.
     /// </summary>
@@ -45,11 +47,12 @@ public abstract class ConfigReader : IConfigReader
     {
         _connections.Clear();
     }
+
     public bool IsSetup()
     {
         return _connections != null && _connections.Any();
     }
-    
+
     protected async Task InitializeUniqueIds(ConnectionStrings con, string pattern)
     {
         string? tenant = con.Name.Split("_").FirstOrDefault();

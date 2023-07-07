@@ -15,7 +15,8 @@ public class HttpConfigReader : ConfigReader
 
     public HttpConfigReader(Microsoft.Extensions.Configuration.IConfiguration configuration,
         ILogger<HttpConfigReader> logger, IUniqueIdRetriever uniqueIdRetriever,
-        TsWebClient webClient) : base(uniqueIdRetriever)
+        TsWebClient webClient,
+        Settings settings) : base(uniqueIdRetriever, settings)
     {
         _configuration = configuration;
         _logger = logger;
@@ -39,8 +40,7 @@ public class HttpConfigReader : ConfigReader
     /// </summary>
     public override async Task Refresh()
     {
-        var configReaderUrls =
-            _configuration.GetSection("TenantSettings").GetSection("ConfigReaderUrl").Get<string[]>();
+        var configReaderUrls = _settings.ConfigReaderUrls;
         _connections = new ConcurrentDictionary<string, IList<ConnectionStrings>>();
 
         foreach (var configReaderUrl in configReaderUrls)
@@ -48,15 +48,14 @@ public class HttpConfigReader : ConfigReader
             var tenants = await _webClient.GetAsync(configReaderUrl, System.Threading.CancellationToken.None);
             var conns = new List<ConnectionStrings>();
 
-            string pattern = _configuration.GetSection("TenantSettings").GetSection("UniqueIdDbPattern").Value;
-            string sql = _configuration.GetSection("TenantSettings").GetSection("SqlUniqueIdLookup").Value;
+            string pattern = _settings.UniqueIdDbPattern;
 
             var tasks = new List<Task>();
             foreach (var tenant in tenants)
             {
                 foreach (var connection in tenant.Connections)
                 {
-                    var con = new ConnectionStrings()
+                    var con = new ConnectionStrings(_settings.DecryptionKey)
                         { Name = $"{tenant.TenantId}_{connection.Key}", ConnStr = connection.Value };
                     conns.Add(con);
                     tasks.Add(InitializeUniqueIds(con, pattern));
