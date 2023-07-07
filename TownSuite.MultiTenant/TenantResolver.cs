@@ -95,7 +95,11 @@ public class TenantResolver
         {
             foreach (var connection in connections)
             {
-                t.Connections.Add(connection.Name, connection.ConnStr);
+                if (!t.Connections.ContainsKey(connection.Name))
+                {
+                    t.Connections.Add(connection.Name, connection.ConnStr);
+                }
+
                 string alias = connection.Name.Split("_")[0];
                 if (!t.Aliases.Contains(alias))
                 {
@@ -111,7 +115,7 @@ public class TenantResolver
 
             return t;
         }
-        
+
         return ModifyTenantDictionary(tenantId, reset, t) as Tenant;
     }
 

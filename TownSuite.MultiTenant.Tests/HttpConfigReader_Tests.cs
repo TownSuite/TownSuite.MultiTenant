@@ -43,7 +43,7 @@ public class HttpConfigReader_Tests
         Assert.That(tenantOneConnections.FirstOrDefault(p => p.Name == "tenant1_app2").ConnStr,
             Is.EqualTo("PLACEHOLDER2"));
         Assert.That(
-            tenantOneConnections.FirstOrDefault(p => p.Name == "tenant1_a.dns.record.as.tenant.townsuite.com_app1")
+            tenantOneConnections.FirstOrDefault(p => p.Name == "a.dns.record.as.tenant.townsuite.com_app1")
                 .ConnStr,
             Is.EqualTo("tenant 1 alias"));
 
@@ -54,7 +54,7 @@ public class HttpConfigReader_Tests
         Assert.That(tenantTwoConnections.FirstOrDefault(p => p.Name == "tenant2_app2").ConnStr,
             Is.EqualTo("PLACEHOLDER4"));
         Assert.That(
-            tenantTwoConnections.FirstOrDefault(p => p.Name == "tenant2_second.dns.record.as.tenant.townsuite.com_app1")
+            tenantTwoConnections.FirstOrDefault(p => p.Name == "second.dns.record.as.tenant.townsuite.com_app1")
                 .ConnStr,
             Is.EqualTo("tenant 2 alias"));
     }

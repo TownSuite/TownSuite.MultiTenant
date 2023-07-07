@@ -19,12 +19,12 @@ public class FakeHttpClient : TsWebClient
         };
         tenant1.Connections.Add(new KeyValuePairOfStringAndString()
         {
-            Key="app1",
+            Key="tenant1_app1",
             Value = "PLACEHOLDER1"
         });
         tenant1.Connections.Add(new KeyValuePairOfStringAndString()
         {
-            Key="app2",
+            Key="tenant1_app2",
             Value = "PLACEHOLDER2"
         });
         tenant1.Connections.Add(new KeyValuePairOfStringAndString()
@@ -40,12 +40,12 @@ public class FakeHttpClient : TsWebClient
         };
         tenant2.Connections.Add(new KeyValuePairOfStringAndString()
         {
-            Key="app1",
+            Key="tenant2_app1",
             Value = "PLACEHOLDER3"
         });
         tenant2.Connections.Add(new KeyValuePairOfStringAndString()
         {
-            Key="app2",
+            Key="tenant2_app2",
             Value = "PLACEHOLDER4"
         });
         tenant2.Connections.Add(new KeyValuePairOfStringAndString()
@@ -61,7 +61,7 @@ public class FakeHttpClient : TsWebClient
         };
         tenant3.Connections.Add(new KeyValuePairOfStringAndString()
         {
-            Key="app1",
+            Key="tenant3_app1",
             Value = "PLACEHOLDER5"
         });
         

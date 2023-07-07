@@ -56,7 +56,7 @@ public class HttpConfigReader : ConfigReader
                 foreach (var connection in tenant.Connections)
                 {
                     var con = new ConnectionStrings(_settings.DecryptionKey)
-                        { Name = $"{tenant.TenantId}_{connection.Key}", ConnStr = connection.Value };
+                        { Name = $"{connection.Key}", ConnStr = connection.Value };
                     conns.Add(con);
                     tasks.Add(InitializeUniqueIds(con, pattern));
                 }
