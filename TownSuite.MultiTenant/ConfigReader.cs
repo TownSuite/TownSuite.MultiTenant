@@ -127,4 +127,9 @@ public abstract class ConfigReader : IConfigReader
             }
         }
     }
+
+    public IList<string> GetTenantIds()
+    {
+        return _connections.Keys.Distinct().ToList();
+    }
 }

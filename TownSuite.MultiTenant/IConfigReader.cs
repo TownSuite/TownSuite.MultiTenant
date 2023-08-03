@@ -9,6 +9,8 @@ public interface IConfigReader
     IList<ConnectionStrings> GetConnections(string tenant);
 
     string GetConnection(string tenant, string appType);
+    
+    IList<string> GetTenantIds();
 
     /// <summary>
     /// Return a list of all connections.

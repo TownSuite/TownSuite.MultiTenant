@@ -12,6 +12,8 @@ public class TenantResolver
     static readonly ConcurrentDictionary<string, Tenant> _tenants =
         new ConcurrentDictionary<string, Tenant>();
 
+    public  ConcurrentDictionary<string, Tenant> Tenants => _tenants;
+
     public TenantResolver(ILogger<TenantResolver> logger, IConfigReader reader)
     {
         _logger = logger;
@@ -132,5 +134,23 @@ public class TenantResolver
         }
 
         return SetupTenant(tenantId, reset: false);
+    }
+
+    public async Task ResolveAll()
+    {
+        if (!_reader.IsSetup())
+        {
+            await _reader.Refresh();
+        }
+
+        foreach (var uniqueId in _reader.GetTenantIds())
+        {
+            await ResolveAsync(uniqueId, reset: true);
+        }
+    }
+
+    public void Clear()
+    {
+        _tenants.Clear();
     }
 }

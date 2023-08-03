@@ -17,6 +17,41 @@ Connection string tenant naming convention:
 Remove the {} and replace the tenant and connectionstring with the real values.
 
 
+## DI setup
+
+program.cs add services
+
+```cs
+services.AddSingleton<TownSuite.MultiTenant.Settings>((s) => new TownSuite.MultiTenant.Settings()
+{
+    UniqueIdDbPattern = s.GetService<IConfiguration>().GetSection("TenantSettings")
+        .GetSection("UniqueIdDbPattern").Value,
+    DecryptionKey = s.GetService<IConfiguration>().GetSection("TenantSettings").GetSection("DecryptionKey")
+        .Value,
+    ConfigReaderUrls = s.GetService<IConfiguration>().GetSection("TenantSettings").GetSection("ConfigReaderUrl")
+        .Get<string[]>()
+});
+services.AddSingleton<IUniqueIdRetriever>((s) =>
+{
+    var config = s.GetService<IConfiguration>();
+    string sqlUniqueIdLookup =
+        config.GetSection("TenantSettings").GetSection("SqlUniqueIdLookup").Get<string>();
+    return new UniqueIdRetriever(sqlUniqueIdLookup);
+});
+services.AddSingleton<TsWebClient>((s) =>
+{
+    var config = s.GetService<IConfiguration>();
+    string userAgent =
+        config.GetSection("TenantSettings").GetSection("UserAgent").Get<string>();
+    string bearerToken =
+        config.GetSection("TenantSettings").GetSection("SqlUniqueIdLookup").Get<string>();
+    var webClient = new TsWebClient(new HttpClient(),
+        bearerToken: bearerToken, userAgent: userAgent);
+    return webClient;
+});
+services.AddSingleton<IConfigReader, HttpConfigReader>();
+services.AddSingleton<TenantResolver>();
+```
 
 
 ## AppSettingsConfigReader - Example
@@ -36,7 +71,8 @@ Read tenant information from a appsettings.json file.
   "TenantSettings": {
     "UniqueIdDbPattern": ".*_Web",
     "SqlUniqueIdLookup": "SELECT Top 1 Id FROM ExampleTable"
-  }
+  },
+  "DecryptionKey": "PLACEHOLDER"
 }
 ```
 
@@ -57,35 +93,17 @@ namespace ExampleApplication.Controllers;
 [Route("[controller]")]
 public class ExampleController : ControllerBase
 {
-    private readonly ILogger<AppSettingsConfigReader> _loggerConfigReader;
-    private ILogger<TenantResolver> _loggerTenantResolver;
-    private readonly IConfiguration _config;
+    private readonly TenantResolver _resolver;
 
-    public ExampleController(ILogger<TownSuite.MultiTenant.AppSettingsConfigReader> loggerConfigReader,
-        ILogger<TenantResolver> loggerTenantResolver,
-        IConfiguration config)
+    public ExampleController(TenantResolver resolver)
     {
-        _loggerConfigReader = loggerConfigReader;
-        _config = config;
+        _resolver = resolver;
     }
 
     [HttpGet()]
     public async Task<IActionResult> Get(string tenantId)
     {
-        #region ThisRegionShouldBeInStartup
-
-        // Inject TenantResolver through the constructor.
-        var reader = new AppSettingsConfigReader(_config, _loggerConfigReader,
-            new UniqueIdRetriever("SELECT uniqueId FROM exampleTable1"));
-        if (!reader.IsSetup())
-        {
-            await reader.Refresh();
-        }
-        
-        var resolver = new TenantResolver(_loggerTenantResolver, reader);
-        #endregion
-
-        var tenant = await resolver.Resolve(tenantId);
+        var tenant = await _resolver.Resolve(tenantId);
 
         await using var conn = new SqlConnection(tenant.Connections["app1"]);
         await conn.OpenAsync();
@@ -95,8 +113,6 @@ public class ExampleController : ControllerBase
     }
 }
 ```
-
-
 
 ## HttpConfigReader - Example 
 
@@ -110,7 +126,8 @@ Settings that are required to make an http call and read the output
       "http://localhost:5000/api/ConfigReader",
       "https://localhost:5001/api/ConfigReader"
     ],
-    "ConfigReaderUrlBearerToken": "PLACEHOLDER"
+    "ConfigReaderUrlBearerToken": "PLACEHOLDER",
+    "DecryptionKey": "PLACEHOLDER"
   }
 }
 
@@ -163,43 +180,80 @@ namespace ExampleApplication.Controllers;
 [Route("[controller]")]
 public class ExampleController : ControllerBase
 {
-    private readonly ILogger<HttpConfigReader> _loggerConfigReader;
-    private ILogger<TenantResolver> _loggerTenantResolver;
-    private readonly IConfiguration _config;
+    private readonly TenantResolver _resolver;
 
-    public ExampleController(ILogger<TownSuite.MultiTenant.HttpConfigReader> loggerConfigReader,
-        ILogger<TenantResolver> loggerTenantResolver,
-        IConfiguration config)
+    public ExampleController(TenantResolver resolver)
     {
-        _loggerConfigReader = loggerConfigReader;
-        _config = config;
+        _resolver = resolver;
     }
 
     [HttpGet()]
     public async Task<IActionResult> Get(string tenantId)
     {
-        #region ThisRegionShouldBeInStartup
-        // Inject TenantResolver through the constructor.
-        var webClient = new TsWebClient(new HttpClient(),
-            bearerToken: "PLACEHOLDER", userAgent: "PLACEHOLDER");
-        var reader = new HttpConfigReader(_config, _loggerConfigReader,
-            new UniqueIdRetriever("SELECT uniqueId FROM exampleTable1"),
-            webClient);
-        if (!reader.IsSetup())
-        {
-            await reader.Refresh();
-        }
-
-        var resolver = new TenantResolver(_loggerTenantResolver, reader);
-        #endregion
-
-        var tenant = await resolver.Resolve(tenantId);
+        var tenant = await _resolver.Resolve(tenantId);
 
         await using var conn = new SqlConnection(tenant.Connections["app1"]);
         await conn.OpenAsync();
         var data = await conn.QueryAsync("SELECT * FROM exampleTable2");
 
         return Ok(data);
+    }
+}
+```
+
+
+
+### Worker service connecting to all tenants
+
+
+use an extension method to create connections
+
+
+```cs
+public static class TenantExtensions
+{
+    public static DbConnection CreateConnection(this Tenant tenant, string appName)
+    {
+        return new SqlConnection(tenant.Connections[appName]);
+    }
+}
+```
+
+
+Worker background service looping through all tenants and reading data.
+
+```cs
+public class Worker : BackgroundService
+{
+    private readonly ILogger<Worker> _logger;
+    private readonly TenantResolver _resolver;
+
+    public Worker(ILogger<Worker> logger, TenantResolver resolver)
+    {
+        _logger = logger;
+        _resolver= resolver;
+    }
+
+    protected override async Task ExecuteAsync(CancellationToken stoppingToken)
+    {
+        const int oneHour = 1000 * 60 * 60;
+        
+        while (!stoppingToken.IsCancellationRequested)
+        {
+            _logger.LogInformation("Worker running at: {time}", DateTimeOffset.Now);
+
+            await _resolver.ResolveAll();
+
+            foreach (var tenant in _resolver.Tenants)
+            {
+                // example: do stuff with tenants app1 databases
+                await using var conn =  tenant.CreateConnection("app1");
+                await conn.OpenAsync();
+                var data = await conn.QueryAsync("SELECT * FROM exampleTable2");
+            }
+
+            await Task.Delay(oneHour, stoppingToken);
+        }
     }
 }
 ```
