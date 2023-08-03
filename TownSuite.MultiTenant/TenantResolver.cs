@@ -145,7 +145,15 @@ public class TenantResolver
 
         foreach (var uniqueId in _reader.GetTenantIds())
         {
-            await ResolveAsync(uniqueId, reset: true);
+            try
+            {
+                await ResolveAsync(uniqueId, reset: true);
+            }
+            catch (Exception ex)
+            {
+                // Log invalid tenants as a critical error but let the program continue with valid tenants.
+                _logger.LogCritical(ex, $"Failed to retrieve resolve tenant {uniqueId}");
+            }
         }
     }
 
