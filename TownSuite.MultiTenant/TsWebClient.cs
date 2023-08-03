@@ -20,6 +20,12 @@ public class TsWebClient
     void PrepareRequest(System.Net.Http.HttpClient client, System.Net.Http.HttpRequestMessage request, string url)
     {
         request.Headers.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", _bearerToken);
+
+        if (string.IsNullOrWhiteSpace(_userAgent))
+        {
+            throw new TownSuiteException("User-Agent is required.");
+        }
+        
         request.Headers.Add("User-Agent", _userAgent);
     }
 
