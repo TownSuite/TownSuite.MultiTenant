@@ -28,4 +28,56 @@ jobs:
         path: |
           TownSuite.MultiTenant.Tests/bin/Release/net6.0/nunit-result.trx
         retention-days: 1
+    - name: Publish
+      run: dotnet publish TownSuite.MultiTenant.Console -c Release -r linux-x64 -p:PublishReadyToRun=true --self-contained true -p:PublishSingleFile=true -p:EnableCompressionInSingleFile=true
+    - name: Archive linux artifacts
+      uses: actions/upload-artifact@v3
+      with:
+        name: TownSuite.MultiTenant.Console-linux-x64
+        path: |
+          TownSuite.MultiTenant.Console/bin/Release/net6.0/linux-x64
+        retention-days: 1
+    
+  windows-build:
+    runs-on: windows-latest
+    steps:
+    - uses: actions/checkout@v3
+    - name: Setup .NET
+      uses: actions/setup-dotnet@v3
+      with:
+        dotnet-version: 6.0.x
+    - name: Restore dependencies
+      run: dotnet restore TownSuite.MultiTenant.sln
+    - name: Build
+      run: dotnet build TownSuite.MultiTenant.sln --no-restore -c Release
+    - name: Publish
+      run: dotnet publish TownSuite.MultiTenant.Console -c Release -r win-x64 -p:PublishReadyToRun=true --self-contained true -p:PublishSingleFile=true -p:EnableCompressionInSingleFile=true
+    - name: Archive windows artifacts
+      uses: actions/upload-artifact@v3
+      with:
+        name: TownSuite.MultiTenant.Console-win-x64
+        path: |
+          TownSuite.MultiTenant.Console/bin/Release/net6.0/win-x64
+        retention-days: 1
 
+  mac-build:
+    runs-on: macos-latest
+    steps:
+    - uses: actions/checkout@v3
+    - name: Setup .NET
+      uses: actions/setup-dotnet@v3
+      with:
+        dotnet-version: 6.0.x
+    - name: Restore dependencies
+      run: dotnet restore TownSuite.MultiTenant.sln
+    - name: Build
+      run: dotnet build TownSuite.MultiTenant.sln --no-restore -c Release
+    - name: Publish
+      run: dotnet publish TownSuite.MultiTenant.Console -c Release -r osx-x64 -p:PublishReadyToRun=true --self-contained true -p:PublishSingleFile=true -p:EnableCompressionInSingleFile=true
+    - name: Archive mac artifacts
+      uses: actions/upload-artifact@v3
+      with:
+        name: TownSuite.MultiTenant.Console-osx-x64
+        path: |
+          TownSuite.MultiTenant.Console/bin/Release/net6.0/osx-x64
+        retention-days: 1
