@@ -11,12 +11,10 @@ public interface IConfigReader
     string GetConnection(string tenant, string appType);
     
     IList<string> GetTenantIds();
-
-    /// <summary>
-    /// Return a list of all connections.
-    /// </summary>
-    /// <returns>key=UniqueTenantId</returns>
+    
     Task Refresh();
 
     bool IsSetup();
+
+    void Clear();
 }

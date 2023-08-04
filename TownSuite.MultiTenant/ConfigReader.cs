@@ -13,9 +13,7 @@ public abstract class ConfigReader : IConfigReader
     protected static ConcurrentDictionary<string, IList<ConnectionStrings>> _connections;
     private readonly IUniqueIdRetriever _uniqueIdRetriever;
     protected readonly Settings _settings;
-
-    private TsWebClient _webClient;
-
+    
     public List<Exception> Exceptions { get; private set; } = new List<Exception>();
 
     protected ConfigReader(IUniqueIdRetriever uniqueIdRetriever, Settings settings)
@@ -45,7 +43,7 @@ public abstract class ConfigReader : IConfigReader
     /// </summary>
     public void Clear()
     {
-        _connections.Clear();
+        _connections?.Clear();
     }
 
     public bool IsSetup()
@@ -86,7 +84,7 @@ public abstract class ConfigReader : IConfigReader
             addValueFactory: (key) => new List<ConnectionStrings>() { con },
             updateValueFactory: (s, list) =>
             {
-                if (!list.Any(p => string.Equals(p.Name, con.Name, StringComparison.InvariantCultureIgnoreCase)))
+                if (!list.ToArray().Any(p => string.Equals(p.Name, con.Name, StringComparison.InvariantCultureIgnoreCase)))
                 {
                     list.Add(con);
                 }

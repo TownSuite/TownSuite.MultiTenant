@@ -7,11 +7,6 @@ namespace TownSuite.MultiTenant.Tests;
 public class Tenant_Tests
 {
     [Test]
-    public async Task Appsettings_Test()
-    {
-    }
-
-    [Test]
     public void Clone_Test()
     {
         var t = new Tenant("abc");
