@@ -1,24 +1,20 @@
 using System.Collections.Concurrent;
 using System.Text.RegularExpressions;
-using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 
 namespace TownSuite.MultiTenant;
 
 public class HttpConfigReader : ConfigReader
 {
-    private readonly Microsoft.Extensions.Configuration.IConfiguration _configuration;
     private readonly ILogger<HttpConfigReader> _logger;
     private readonly IUniqueIdRetriever _uniqueIdRetriever;
 
     private TsWebClient _webClient;
 
-    public HttpConfigReader(Microsoft.Extensions.Configuration.IConfiguration configuration,
-        ILogger<HttpConfigReader> logger, IUniqueIdRetriever uniqueIdRetriever,
+    public HttpConfigReader(ILogger<HttpConfigReader> logger, IUniqueIdRetriever uniqueIdRetriever,
         TsWebClient webClient,
         Settings settings) : base(uniqueIdRetriever, settings)
     {
-        _configuration = configuration;
         _logger = logger;
         _uniqueIdRetriever = uniqueIdRetriever;
         _webClient = webClient;
