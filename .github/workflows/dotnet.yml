@@ -35,7 +35,7 @@ jobs:
       with:
         name: TownSuite.MultiTenant.Console-linux-x64
         path: |
-          TownSuite.MultiTenant.Console/bin/Release/net6.0/linux-x64
+          TownSuite.MultiTenant.Console/bin/Release/net6.0/linux-x64/publish
         retention-days: 1
     
   windows-build:
@@ -57,7 +57,7 @@ jobs:
       with:
         name: TownSuite.MultiTenant.Console-win-x64
         path: |
-          TownSuite.MultiTenant.Console/bin/Release/net6.0/win-x64
+          TownSuite.MultiTenant.Console/bin/Release/net6.0/win-x64/publish
         retention-days: 1
 
   mac-build:
@@ -79,5 +79,5 @@ jobs:
       with:
         name: TownSuite.MultiTenant.Console-osx-x64
         path: |
-          TownSuite.MultiTenant.Console/bin/Release/net6.0/osx-x64
+          TownSuite.MultiTenant.Console/bin/Release/net6.0/osx-x64/publish
         retention-days: 1
