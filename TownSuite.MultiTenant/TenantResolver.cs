@@ -90,7 +90,7 @@ public class TenantResolver
 
     private Tenant SetupTenant(string tenantId, bool reset)
     {
-        var connections = _reader.GetConnections(tenantId);
+        var connections = _reader.GetConnections(tenantId).OrderBy(p=> p.Name);
 
         var t = new Tenant(tenantId);
         if (connections != null)
@@ -159,6 +159,7 @@ public class TenantResolver
 
     public void Clear()
     {
-        _tenants.Clear();
+        _tenants?.Clear();
+        _reader?.Clear();
     }
 }

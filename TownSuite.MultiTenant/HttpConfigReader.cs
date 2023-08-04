@@ -7,16 +7,14 @@ namespace TownSuite.MultiTenant;
 public class HttpConfigReader : ConfigReader
 {
     private readonly ILogger<HttpConfigReader> _logger;
-    private readonly IUniqueIdRetriever _uniqueIdRetriever;
 
-    private TsWebClient _webClient;
+    private readonly TsWebClient _webClient;
 
     public HttpConfigReader(ILogger<HttpConfigReader> logger, IUniqueIdRetriever uniqueIdRetriever,
         TsWebClient webClient,
         Settings settings) : base(uniqueIdRetriever, settings)
     {
         _logger = logger;
-        _uniqueIdRetriever = uniqueIdRetriever;
         _webClient = webClient;
     }
     
@@ -37,6 +35,7 @@ public class HttpConfigReader : ConfigReader
     public override async Task Refresh()
     {
         var configReaderUrls = _settings.ConfigReaderUrls;
+        _connections?.Clear();
         _connections = new ConcurrentDictionary<string, IList<ConnectionStrings>>();
 
         foreach (var configReaderUrl in configReaderUrls)

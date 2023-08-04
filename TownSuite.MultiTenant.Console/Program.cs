@@ -57,7 +57,7 @@ if (string.IsNullOrWhiteSpace(appPattern))
     Environment.Exit(0);
 }
 
-var environment = Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT");
+var environment = Environment.GetEnvironmentVariable("DOTNET_ENVIRONMENT");
 var builder = new ConfigurationBuilder()
     .AddJsonFile(settingsFile, false, true)
     .AddJsonFile($"appsettings.{environment}.json", true, true)
@@ -83,39 +83,47 @@ var config = new CsvConfiguration(CultureInfo.InvariantCulture)
     NewLine = Environment.NewLine,
 };
 
-using var writer = new StreamWriter("path\\to\\file.csv");
+using var writer = new StreamWriter(outputFile);
 using var csv = new CsvWriter(writer, CultureInfo.InvariantCulture);
 
 
-foreach (var lookup in settings.ConfigPairs)
+foreach (var lookup in settings.ConfigPairs)   
 {
-    var resolver = new TenantResolver(loggerResolver,
-        new HttpConfigReader(loggerReader, new UniqueIdRetriever(lookup.SqlUniqueIdLookup),
-            new TsWebClient(new HttpClient(), lookup.ConfigReaderUrlBearerToken, settings.UserAgent),
-            new Settings()
-            {
-                ConfigReaderUrls = lookup.ConfigReaderUrl,
-                DecryptionKey = lookup.DecryptionKey,
-                UniqueIdDbPattern = lookup.UniqueIdDbPattern
-            }));
-    resolver.Clear();
-    await resolver.ResolveAll();
-
-    foreach (var tenant in resolver.Tenants)
+    try
     {
-        try
-        {
-            // See the centralconfig for appNames
-            await using var conn = tenant.Value.CreateConnection("WebService");
-            await conn.OpenAsync();
-            var records = await conn.QueryAsync<dynamic>(sql);
+        var resolver = new TenantResolver(loggerResolver,
+            new HttpConfigReader(loggerReader, new UniqueIdRetriever(lookup.SqlUniqueIdLookup),
+                new TsWebClient(new HttpClient(), lookup.ConfigReaderUrlBearerToken, settings.UserAgent),
+                new Settings()
+                {
+                    ConfigReaderUrls = lookup.ConfigReaderUrl,
+                    DecryptionKey = lookup.DecryptionKey,
+                    UniqueIdDbPattern = lookup.UniqueIdDbPattern
+                }));
+        resolver.Clear();
+        await resolver.ResolveAll();
 
-            csv.WriteRecords(records);
-        }
-        catch (Exception ex)
+
+        foreach (var tenant in resolver.Tenants.OrderBy(p=>p.Key))
         {
-            logger.LogError(ex, "Failed to retrieve for tenant {tenant}", tenant.Key);
+            try
+            {
+                // See the centralconfig for appNames
+                await using var conn = tenant.Value.CreateConnection("WebService");
+                await conn.OpenAsync();
+                var records = await conn.QueryAsync<dynamic>(sql);
+
+                csv.WriteRecords(records);
+            }
+            catch (Exception ex)
+            {
+                logger.LogError(ex, $"Failed to retrieve for tenant {tenant.Key}");
+            }
         }
+    }
+    catch (Exception e)
+    {
+        logger.LogError(e, $"Failed tenant resolver, config pair {lookup.Id}.");
     }
 }
 
