@@ -42,7 +42,7 @@ public class ConnectionStrings
         }
         catch (Exception ex)
         {
-            Console.Error.WriteLine(ex);
+            Console.Error.WriteLine(new TownSuiteException("Connection string is not encrypted.", ex));
             return cnStr;
         }
 
@@ -56,7 +56,7 @@ public class ConnectionStrings
         }
         catch (Exception ex)
         {
-            Console.Error.Write(ex);
+            Console.Error.WriteLine(new TownSuiteException("Connection string password is not encrypted.", ex));
         }
 
         try
@@ -69,7 +69,7 @@ public class ConnectionStrings
         }
         catch (Exception ex)
         {
-            Console.Error.Write(ex);
+            Console.Error.WriteLine(new TownSuiteException("Connection string userid is not encrypted.", ex));
         }
 
         return csb.ConnectionString;
