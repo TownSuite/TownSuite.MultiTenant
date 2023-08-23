@@ -71,7 +71,7 @@ using var loggerFactory = LoggerFactory.Create(builder =>
     builder
         .AddFilter("Microsoft", LogLevel.Warning)
         .AddFilter("System", LogLevel.Warning)
-        .AddFilter("LoggingConsoleApp.Program", LogLevel.Debug)
+        .AddFilter("TownSuite.MultiTenant.Console", LogLevel.Debug)
         .AddConsole();
 });
 var loggerResolver = loggerFactory.CreateLogger<TenantResolver>();
