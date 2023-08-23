@@ -130,7 +130,7 @@ Settings that are required to make an http call and read the output
     "DecryptionKey": "PLACEHOLDER"
   }
 }
-
+```
 
 The expected data format from an http service is json that matches the below example.
 
