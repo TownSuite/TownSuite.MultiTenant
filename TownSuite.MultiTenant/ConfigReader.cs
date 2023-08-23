@@ -11,7 +11,7 @@ namespace TownSuite.MultiTenant;
 public abstract class ConfigReader : IConfigReader
 {
     protected static ConcurrentDictionary<string, IList<ConnectionStrings>> _connections;
-    private readonly IUniqueIdRetriever _uniqueIdRetriever;
+    protected readonly IUniqueIdRetriever _uniqueIdRetriever;
     protected readonly Settings _settings;
     
     public List<Exception> Exceptions { get; private set; } = new List<Exception>();
@@ -51,7 +51,7 @@ public abstract class ConfigReader : IConfigReader
         return _connections != null && _connections.Any();
     }
 
-    protected async Task InitializeUniqueIds(ConnectionStrings con, string pattern)
+    protected async Task InitializeUniqueIds(ConnectionStrings con, string pattern, AppSettingsConfigPairs configPairs)
     {
         string? tenant = con.Name.Split("_").FirstOrDefault();
         if (string.IsNullOrWhiteSpace(tenant))
@@ -67,7 +67,7 @@ public abstract class ConfigReader : IConfigReader
 
         try
         {
-            string uniqueId = await _uniqueIdRetriever.GetUniqueId(con);
+            string uniqueId = await _uniqueIdRetriever.GetUniqueId(con, configPairs);
 
             AddOrUpdateCons(con, uniqueId);
         }

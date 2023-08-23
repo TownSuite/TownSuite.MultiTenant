@@ -18,7 +18,6 @@ public class HttpConfigReader : ConfigReader
         _webClient = webClient;
     }
     
-
     public override string GetConnection(string tenant, string appType)
     {
         var connectionString = _connections[tenant]
@@ -34,43 +33,47 @@ public class HttpConfigReader : ConfigReader
     /// </summary>
     public override async Task Refresh()
     {
-        var configReaderUrls = _settings.ConfigReaderUrls;
-        _connections?.Clear();
-        _connections = new ConcurrentDictionary<string, IList<ConnectionStrings>>();
-
-        foreach (var configReaderUrl in configReaderUrls)
+        foreach (var configPair in _settings.ConfigPairs)
         {
-            var tenants = await _webClient.GetAsync(configReaderUrl, System.Threading.CancellationToken.None);
-            var conns = new List<ConnectionStrings>();
+            var configReaderUrls = configPair.ConfigReaderUrls;
+            _connections?.Clear();
+            _connections = new ConcurrentDictionary<string, IList<ConnectionStrings>>();
 
-            string pattern = _settings.UniqueIdDbPattern;
-
-            var tasks = new List<Task>();
-            foreach (var tenant in tenants)
+            foreach (var configReaderUrl in configReaderUrls)
             {
-                foreach (var connection in tenant.Connections)
+                var tenants = await _webClient.GetAsync(configReaderUrl, configPair.ConfigReaderUrlBearerToken,
+                    System.Threading.CancellationToken.None);
+                var conns = new List<ConnectionStrings>();
+
+                string pattern = configPair.UniqueIdDbPattern;
+
+                var tasks = new List<Task>();
+                foreach (var tenant in tenants)
                 {
-                    var con = new ConnectionStrings(_settings.DecryptionKey)
-                        { Name = $"{connection.Key}", ConnStr = connection.Value };
-                    conns.Add(con);
-                    tasks.Add(InitializeUniqueIds(con, pattern));
+                    foreach (var connection in tenant.Connections)
+                    {
+                        var con = new ConnectionStrings(configPair.DecryptionKey)
+                            { Name = $"{connection.Key}", ConnStr = connection.Value };
+                        conns.Add(con);
+                        tasks.Add(InitializeUniqueIds(con, pattern, configPair));
+                    }
                 }
-            }
 
-            foreach (var task in tasks)
-            {
-                await task;
-            }
-            
-            if (Exceptions.Any())
-            {
-                foreach(var ex in Exceptions)
+                foreach (var task in tasks)
                 {
-                    _logger.LogError(ex.Message, ex);
+                    await task;
                 }
-            }
 
-            GroupDatabasesByTenant(conns);
+                if (Exceptions.Any())
+                {
+                    foreach (var ex in Exceptions)
+                    {
+                        _logger.LogError(ex.Message, ex);
+                    }
+                }
+
+                GroupDatabasesByTenant(conns);
+            }
         }
     }
 }

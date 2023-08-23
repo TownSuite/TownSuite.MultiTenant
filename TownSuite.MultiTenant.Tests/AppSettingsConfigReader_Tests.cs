@@ -16,15 +16,8 @@ public class AppSettingsConfigReader_Tests
             .AddJsonFile("appsettings_reader_test.json")
             .AddEnvironmentVariables()
             .Build();
-
-        string pattern = config.GetSection("TenantSettings").GetSection("UniqueIdDbPattern").Value;
-        string sql = config.GetSection("TenantSettings").GetSection("SqlUniqueIdLookup").Value;
-        string decryptionKey = config.GetSection("TenantSettings").GetSection("DecryptionKey").Value;
-        settings = new Settings()
-        {
-            UniqueIdDbPattern = pattern,
-            DecryptionKey = decryptionKey
-        };
+        
+        settings = config.GetSection("TenantSettings").Get<Settings>();
     }
 
     [Test]

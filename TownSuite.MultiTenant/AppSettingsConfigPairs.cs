@@ -1,9 +1,9 @@
-namespace TownSuite.MultiTenant.Console;
+namespace TownSuite.MultiTenant;
 
 public class AppSettingsConfigPairs
 {
     public string Id { get; init; }
-    public string[] ConfigReaderUrl { get; init; }
+    public string[] ConfigReaderUrls { get; init; }
     public string ConfigReaderUrlBearerToken { get; init; }
     public string DecryptionKey { get; init; }
     public string UniqueIdDbPattern { get; init; }

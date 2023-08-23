@@ -2,12 +2,13 @@ namespace TownSuite.MultiTenant.Tests;
 
 public class FakeHttpClient : TsWebClient
 {
-    public FakeHttpClient(HttpClient httpClient, string bearerToken, string userAgent) : base(httpClient, bearerToken,
+    public FakeHttpClient(HttpClient httpClient, string bearerToken, string userAgent) : base(httpClient,
         userAgent)
     {
     }
 
-    public override Task<ICollection<WebSearchResponse>> GetAsync(string url, CancellationToken cancellationToken)
+    public override Task<ICollection<WebSearchResponse>> GetAsync(string url, string bearerToken,
+        CancellationToken cancellationToken)
     {
         var response = new List<WebSearchResponse>();
 
@@ -19,17 +20,17 @@ public class FakeHttpClient : TsWebClient
         };
         tenant1.Connections.Add(new KeyValuePairOfStringAndString()
         {
-            Key="tenant1_app1",
+            Key = "tenant1_app1",
             Value = "PLACEHOLDER1"
         });
         tenant1.Connections.Add(new KeyValuePairOfStringAndString()
         {
-            Key="tenant1_app2",
+            Key = "tenant1_app2",
             Value = "PLACEHOLDER2"
         });
         tenant1.Connections.Add(new KeyValuePairOfStringAndString()
         {
-            Key="a.dns.record.as.tenant.townsuite.com_app1",
+            Key = "a.dns.record.as.tenant.townsuite.com_app1",
             Value = "tenant 1 alias"
         });
         var tenant2 = new WebSearchResponse()
@@ -40,17 +41,17 @@ public class FakeHttpClient : TsWebClient
         };
         tenant2.Connections.Add(new KeyValuePairOfStringAndString()
         {
-            Key="tenant2_app1",
+            Key = "tenant2_app1",
             Value = "PLACEHOLDER3"
         });
         tenant2.Connections.Add(new KeyValuePairOfStringAndString()
         {
-            Key="tenant2_app2",
+            Key = "tenant2_app2",
             Value = "PLACEHOLDER4"
         });
         tenant2.Connections.Add(new KeyValuePairOfStringAndString()
         {
-            Key="second.dns.record.as.tenant.townsuite.com_app1",
+            Key = "second.dns.record.as.tenant.townsuite.com_app1",
             Value = "tenant 2 alias"
         });
         var tenant3 = new WebSearchResponse()
@@ -61,10 +62,10 @@ public class FakeHttpClient : TsWebClient
         };
         tenant3.Connections.Add(new KeyValuePairOfStringAndString()
         {
-            Key="tenant3_app1",
+            Key = "tenant3_app1",
             Value = "PLACEHOLDER5"
         });
-        
+
         response.Add(tenant1);
         response.Add(tenant2);
         response.Add(tenant3);

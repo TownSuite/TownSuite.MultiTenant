@@ -9,7 +9,6 @@ public class AppSettingsConfigReader : ConfigReader
 {
     private readonly Microsoft.Extensions.Configuration.IConfiguration _configuration;
     private readonly ILogger<AppSettingsConfigReader> _logger;
-    private readonly IUniqueIdRetriever _uniqueIdRetriever;
 
     public AppSettingsConfigReader(Microsoft.Extensions.Configuration.IConfiguration configuration,
         ILogger<AppSettingsConfigReader> logger, IUniqueIdRetriever uniqueIdRetriever,
@@ -17,7 +16,6 @@ public class AppSettingsConfigReader : ConfigReader
     {
         _configuration = configuration;
         _logger = logger;
-        _uniqueIdRetriever = uniqueIdRetriever;
     }
 
     public override string GetConnection(string tenant, string appType)
@@ -39,14 +37,17 @@ public class AppSettingsConfigReader : ConfigReader
         _connections = new ConcurrentDictionary<string, IList<ConnectionStrings>>();
         var conns = new List<ConnectionStrings>();
 
-        string pattern = _settings.UniqueIdDbPattern;
-        
+        var firstSettingsRecord = _settings.ConfigPairs.FirstOrDefault();
+
+        string pattern = firstSettingsRecord.UniqueIdDbPattern;
+
         var tasks = new List<Task>();
         foreach (var connection in connections)
         {
-            var con = new ConnectionStrings(_settings.DecryptionKey) { Name = connection.Key, ConnStr = connection.Value };
+            var con = new ConnectionStrings(firstSettingsRecord.DecryptionKey)
+                { Name = connection.Key, ConnStr = connection.Value };
             conns.Add(con);
-            tasks.Add(InitializeUniqueIds(con, pattern));
+            tasks.Add(InitializeUniqueIds(con, pattern, firstSettingsRecord));
         }
 
         foreach (var task in tasks)

@@ -6,21 +6,17 @@ namespace TownSuite.MultiTenant;
 public class TsWebClient
 {
     private System.Net.Http.HttpClient _httpClient;
-    private readonly string _bearerToken;
     private readonly string _userAgent;
 
     public TsWebClient(System.Net.Http.HttpClient httpClient,
-        string bearerToken, string userAgent)
+        string userAgent)
     {
         _httpClient = httpClient;
-        _bearerToken = bearerToken;
         _userAgent = userAgent;
     }
     
-    void PrepareRequest(System.Net.Http.HttpClient client, System.Net.Http.HttpRequestMessage request, string url)
+    void PrepareRequest(System.Net.Http.HttpClient client, System.Net.Http.HttpRequestMessage request)
     {
-        request.Headers.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", _bearerToken);
-
         if (string.IsNullOrWhiteSpace(_userAgent))
         {
             throw new TownSuiteException("User-Agent is required.");
@@ -30,7 +26,7 @@ public class TsWebClient
     }
 
     public virtual async System.Threading.Tasks.Task<System.Collections.Generic.ICollection<WebSearchResponse>> GetAsync(
-        string url, System.Threading.CancellationToken cancellationToken)
+        string url, string bearerToken, System.Threading.CancellationToken cancellationToken)
     {
         
         var client_ = _httpClient;
@@ -44,8 +40,9 @@ public class TsWebClient
                     System.Net.Http.Headers.MediaTypeWithQualityHeaderValue.Parse("application/json"));
                 
                 request_.RequestUri = new System.Uri(url, System.UriKind.RelativeOrAbsolute);
+                request_.Headers.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", bearerToken);
 
-                PrepareRequest(client_, request_, url);
+                PrepareRequest(client_, request_);
 
                 var response_ = await client_
                     .SendAsync(request_, System.Net.Http.HttpCompletionOption.ResponseHeadersRead, cancellationToken)

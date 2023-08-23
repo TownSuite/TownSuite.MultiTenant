@@ -6,7 +6,6 @@ using Dapper;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using TownSuite.MultiTenant;
-using TownSuite.MultiTenant.Console;
 
 // See https://aka.ms/new-console-template for more information
 
@@ -64,7 +63,7 @@ var builder = new ConfigurationBuilder()
     .AddEnvironmentVariables();
 var configurationRoot = builder.Build();
 
-var settings = configurationRoot.GetSection("AppSettings").Get<AppSettings>();
+var settings = configurationRoot.GetSection("TenantSettings").Get<TownSuite.MultiTenant.Settings>();
 
 using var loggerFactory = LoggerFactory.Create(builder =>
 {
@@ -86,45 +85,36 @@ var config = new CsvConfiguration(CultureInfo.InvariantCulture)
 using var writer = new StreamWriter(outputFile);
 using var csv = new CsvWriter(writer, CultureInfo.InvariantCulture);
 
-
-foreach (var lookup in settings.ConfigPairs)   
+try
 {
-    try
+    var resolver = new TenantResolver(loggerResolver,
+        new HttpConfigReader(loggerReader, new SqlUniqueIdRetriever(),
+            new TsWebClient(new HttpClient(), settings.UserAgent),
+            settings));
+    resolver.Clear();
+    await resolver.ResolveAll();
+
+
+    foreach (var tenant in resolver.Tenants.OrderBy(p => p.Key))
     {
-        var resolver = new TenantResolver(loggerResolver,
-            new HttpConfigReader(loggerReader, new UniqueIdRetriever(lookup.SqlUniqueIdLookup),
-                new TsWebClient(new HttpClient(), lookup.ConfigReaderUrlBearerToken, settings.UserAgent),
-                new Settings()
-                {
-                    ConfigReaderUrls = lookup.ConfigReaderUrl,
-                    DecryptionKey = lookup.DecryptionKey,
-                    UniqueIdDbPattern = lookup.UniqueIdDbPattern
-                }));
-        resolver.Clear();
-        await resolver.ResolveAll();
-
-
-        foreach (var tenant in resolver.Tenants.OrderBy(p=>p.Key))
+        try
         {
-            try
-            {
-                // See the centralconfig for appNames
-                await using var conn = tenant.Value.CreateConnection("WebService");
-                await conn.OpenAsync();
-                var records = await conn.QueryAsync<dynamic>(sql);
+            // See the centralconfig for appNames
+            await using var conn = tenant.Value.CreateConnection("WebService");
+            await conn.OpenAsync();
+            var records = await conn.QueryAsync<dynamic>(sql);
 
-                csv.WriteRecords(records);
-            }
-            catch (Exception ex)
-            {
-                logger.LogError(ex, $"Failed to retrieve for tenant {tenant.Key}");
-            }
+            csv.WriteRecords(records);
+        }
+        catch (Exception ex)
+        {
+            logger.LogError(ex, $"Failed to retrieve for tenant {tenant.Key}");
         }
     }
-    catch (Exception e)
-    {
-        logger.LogError(e, $"Failed tenant resolver, config pair {lookup.Id}.");
-    }
+}
+catch (Exception e)
+{
+    logger.LogError(e, $"Failed tenant resolver.");
 }
 
 static void PrintHelp()

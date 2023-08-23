@@ -69,10 +69,17 @@ Read tenant information from a appsettings.json file.
     "tenant2_app1": "Server=tcp:myserver.example.townsuite.com,1433;Initial Catalog=mydatabase2;Persist Security Info=False;User ID=myuser;Password=mypassword;MultipleActiveResultSets=False;Encrypt=True;TrustServerCertificate=False;Connection Timeout=30;"
   },
   "TenantSettings": {
-    "UniqueIdDbPattern": ".*_Web",
-    "SqlUniqueIdLookup": "SELECT Top 1 Id FROM ExampleTable"
-  },
-  "DecryptionKey": "PLACEHOLDER"
+    // AppSettingsConfigReader supports only 1 record in the ConfigPairs
+    "ConfigPairs": [
+        {
+            "Id": 1,
+            "DecryptionKey": "PLACEHOLDER",
+            "UniqueIdDbPattern": ".*_Web",
+            "SqlUniqueIdLookup": "SELECT Top 1 Id FROM ExampleTable"
+        }
+    ],
+    "UserAgent": "TownSuite-MultiTenant-Console Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:109.0) Gecko/20100101 Firefox/115.0"
+  }
 }
 ```
 
@@ -118,17 +125,20 @@ public class ExampleController : ControllerBase
 
 Settings that are required to make an http call and read the output
 ```json
-{
-  "TenantSettings": {
-    "UniqueIdDbPattern": ".*_Web",
-    "SqlUniqueIdLookup": "SELECT Top 1 Id FROM ExampleTable",
-    "ConfigReaderUrl": [
-      "http://localhost:5000/api/ConfigReader",
-      "https://localhost:5001/api/ConfigReader"
+"TenantSettings": {
+    "ConfigPairs": [
+        {
+            "Id": 1,
+            "ConfigReaderUrls": [
+                "http://localhost:5000/api/ConfigReader"
+            ],
+            "ConfigReaderUrlBearerToken": "PLACEHOLDER",
+            "DecryptionKey": "PLACEHOLDER",
+            "UniqueIdDbPattern": ".*_Web",
+            "SqlUniqueIdLookup": "SELECT Top 1 Id FROM ExampleTable"
+        }
     ],
-    "ConfigReaderUrlBearerToken": "PLACEHOLDER",
-    "DecryptionKey": "PLACEHOLDER"
-  }
+    "UserAgent": "TownSuite-MultiTenant-Console Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:109.0) Gecko/20100101 Firefox/115.0"
 }
 ```
 

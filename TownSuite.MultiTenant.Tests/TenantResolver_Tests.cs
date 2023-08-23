@@ -17,15 +17,7 @@ public class TenantResolver_Tests
             .AddEnvironmentVariables()
             .Build();
 
-        string pattern = config.GetSection("TenantSettings").GetSection("UniqueIdDbPattern").Value;
-        string sql = config.GetSection("TenantSettings").GetSection("SqlUniqueIdLookup").Value;
-        string decryptionKey = config.GetSection("TenantSettings").GetSection("DecryptionKey").Value;
-        settings = new Settings()
-        {
-            UniqueIdDbPattern = pattern,
-            DecryptionKey = decryptionKey,
-            ConfigReaderUrls = config.GetSection("TenantSettings").GetSection("ConfigReaderUrl").Get<string[]>()
-        };
+        settings = config.GetSection("TenantSettings").Get<Settings>();
     }
     
     [Test]
