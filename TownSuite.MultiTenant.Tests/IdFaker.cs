@@ -25,6 +25,22 @@ public class IdFaker : IUniqueIdRetriever
         {
             return Task.FromResult($"tenant3");
         }
+        if (con.Name.StartsWith("tenant4_"))
+        {
+            return Task.FromResult($"tenant4");
+        }
+        if (con.Name.StartsWith("tenant5_"))
+        {
+            return Task.FromResult($"tenant5");
+        }
+        if (con.Name.StartsWith("fifth.dns.record"))
+        {
+            return Task.FromResult($"tenant5");
+        }
+        if (con.Name.StartsWith("tenant6_"))
+        {
+            return Task.FromResult($"tenant6");
+        }
         
         return Task.FromResult("");
     }

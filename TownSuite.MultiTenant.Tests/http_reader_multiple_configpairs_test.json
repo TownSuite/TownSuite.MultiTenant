@@ -1,0 +1,36 @@
+{
+  "Logging": {
+    "LogLevel": {
+      "Default": "Debug",
+      "System": "Information",
+      "Microsoft": "Information"
+    }
+  },
+  "TenantSettings": {
+    "ConfigPairs": [
+      {
+        "Id": 1,
+        "ConfigReaderUrls": [
+          "http://localhost:5000/api/ConfigReader",
+          "https://localhost:5001/api/ConfigReader"
+        ],
+        "ConfigReaderUrlBearerToken": "PLACEHOLDER",
+        "DecryptionKey": "",
+        "UniqueIdDbPattern": ".*_app1",
+        "SqlUniqueIdLookup": "SELECT TOP 1 [Id] FROM [dbo].[UniqueId] WHERE [Name] = @name"
+      },
+      {
+        "Id": 2,
+        "ConfigReaderUrls": [
+          "http://localhost:6000/api/ConfigReader",
+          "https://localhost:6001/api/ConfigReader"
+        ],
+        "ConfigReaderUrlBearerToken": "PLACEHOLDER",
+        "DecryptionKey": "",
+        "UniqueIdDbPattern": ".*_app1",
+        "SqlUniqueIdLookup": "SELECT TOP 1 [Id] FROM [dbo].[UniqueId2] WHERE [Name] = @name"
+      }
+    ],
+    "UserAgent": "TownSuite-MultiTenant-Console Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:109.0) Gecko/20100101 Firefox/115.0"
+  }
+}

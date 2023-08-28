@@ -23,7 +23,7 @@ public class TenantResolver_Tests
     [Test]
     public async Task CanResolveAllTenants_Test()
     {
-        var fakeHttpWebClient = new FakeHttpClient(new HttpClient(), "", "");
+        var fakeHttpWebClient = new FakeHttpClient(new HttpClient(), "");
         var logger = Mock.Of<ILogger<HttpConfigReader>>();
         var reader = new HttpConfigReader(logger, new IdFaker(), fakeHttpWebClient, settings);
         await reader.Refresh();

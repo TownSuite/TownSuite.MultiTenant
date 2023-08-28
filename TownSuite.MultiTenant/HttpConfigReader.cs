@@ -33,12 +33,13 @@ public class HttpConfigReader : ConfigReader
     /// </summary>
     public override async Task Refresh()
     {
+        _connections?.Clear();
+        _connections = new ConcurrentDictionary<string, IList<ConnectionStrings>>();
+
         foreach (var configPair in _settings.ConfigPairs)
         {
             var configReaderUrls = configPair.ConfigReaderUrls;
-            _connections?.Clear();
-            _connections = new ConcurrentDictionary<string, IList<ConnectionStrings>>();
-
+      
             foreach (var configReaderUrl in configReaderUrls)
             {
                 var tenants = await _webClient.GetAsync(configReaderUrl, configPair.ConfigReaderUrlBearerToken,

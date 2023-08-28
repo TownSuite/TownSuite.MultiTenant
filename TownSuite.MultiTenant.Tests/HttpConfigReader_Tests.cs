@@ -23,7 +23,7 @@ public class HttpConfigReader_Tests
     [Test]
     public async Task Appsettings_Test()
     {
-        var fakeHttpWebClient = new FakeHttpClient(new HttpClient(), "", "");
+        var fakeHttpWebClient = new FakeHttpClient(new HttpClient(), "");
         var logger = Mock.Of<ILogger<HttpConfigReader>>();
         var reader = new HttpConfigReader(logger, new IdFaker(), fakeHttpWebClient, settings);
         await reader.Refresh();
@@ -54,7 +54,7 @@ public class HttpConfigReader_Tests
     [Test]
     public async Task WithTenantResolverAsync_Test()
     {
-        var fakeHttpWebClient = new FakeHttpClient(new HttpClient(), "", "");
+        var fakeHttpWebClient = new FakeHttpClient(new HttpClient(), "");
         var logger = Mock.Of<ILogger<HttpConfigReader>>();
         var reader = new HttpConfigReader(logger, new IdFaker(), fakeHttpWebClient, settings);
         await reader.Refresh();
@@ -68,7 +68,7 @@ public class HttpConfigReader_Tests
     [Test]
     public async Task WithTenantResolverAsyncReset_Test()
     {
-        var fakeHttpWebClient = new FakeHttpClient(new HttpClient(), "", "");
+        var fakeHttpWebClient = new FakeHttpClient(new HttpClient(), "");
         var logger = Mock.Of<ILogger<HttpConfigReader>>();
         var reader = new HttpConfigReader(logger, new IdFaker(), fakeHttpWebClient, settings);
         await reader.Refresh();
@@ -82,7 +82,7 @@ public class HttpConfigReader_Tests
     [Test]
     public async Task WithTenantResolver_Test()
     {
-        var fakeHttpWebClient = new FakeHttpClient(new HttpClient(), "", "");
+        var fakeHttpWebClient = new FakeHttpClient(new HttpClient(), "");
         var logger = Mock.Of<ILogger<HttpConfigReader>>();
         var reader = new HttpConfigReader(logger, new IdFaker(), fakeHttpWebClient, settings);
         await reader.Refresh();
@@ -96,7 +96,7 @@ public class HttpConfigReader_Tests
     [Test]
     public async Task IsSetup_Test()
     {
-        var fakeHttpWebClient = new FakeHttpClient(new HttpClient(), "", "");
+        var fakeHttpWebClient = new FakeHttpClient(new HttpClient(), "");
         var logger = Mock.Of<ILogger<HttpConfigReader>>();
         var reader = new HttpConfigReader(logger, new IdFaker(), fakeHttpWebClient, settings);
         reader.Clear();
@@ -108,7 +108,7 @@ public class HttpConfigReader_Tests
     [Test]
     public async Task GetConnection_Test()
     {
-        var fakeHttpWebClient = new FakeHttpClient(new HttpClient(), "", "");
+        var fakeHttpWebClient = new FakeHttpClient(new HttpClient(), "");
         var logger = Mock.Of<ILogger<HttpConfigReader>>();
         var reader = new HttpConfigReader(logger, new IdFaker(), fakeHttpWebClient, settings);
         await reader.Refresh();

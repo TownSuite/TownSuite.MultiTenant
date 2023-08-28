@@ -11,10 +11,10 @@ namespace TownSuite.MultiTenant;
 public abstract class ConfigReader : IConfigReader
 {
     protected static ConcurrentDictionary<string, IList<ConnectionStrings>> _connections;
-    protected readonly IUniqueIdRetriever _uniqueIdRetriever;
+    private readonly IUniqueIdRetriever _uniqueIdRetriever;
     protected readonly Settings _settings;
-    
-    public List<Exception> Exceptions { get; private set; } = new List<Exception>();
+
+    protected List<Exception> Exceptions { get; private set; } = new List<Exception>();
 
     protected ConfigReader(IUniqueIdRetriever uniqueIdRetriever, Settings settings)
     {
@@ -62,6 +62,7 @@ public abstract class ConfigReader : IConfigReader
         Match m = Regex.Match(con.Name, pattern, RegexOptions.IgnoreCase);
         if (!m.Success)
         {
+            Exceptions.Add(new TownSuiteException($"{con.Name} did not match pattern {pattern}"));
             return;
         }
 
@@ -76,27 +77,27 @@ public abstract class ConfigReader : IConfigReader
             Exceptions.Add(new TownSuiteException($"Failed to resolve and initialize tenant {con.Name}.", ex));
         }
     }
-
-
+    
     private void AddOrUpdateCons(ConnectionStrings con, string uniqueId)
     {
         _connections.AddOrUpdate(uniqueId,
             addValueFactory: (key) => new List<ConnectionStrings>() { con },
-            updateValueFactory: (s, list) =>
+            updateValueFactory: (k, existinglist) =>
             {
-                if (!list.ToArray().Any(p => string.Equals(p.Name, con.Name, StringComparison.InvariantCultureIgnoreCase)))
+                
+                if (!existinglist.ToArray().Any(p => string.Equals(p.Name, con.Name, StringComparison.InvariantCultureIgnoreCase)))
                 {
-                    list.Add(con);
+                    existinglist.Add(con);
                 }
                 else
                 {
-                    var tmp = list.FirstOrDefault(p =>
+                    var tmp = existinglist.FirstOrDefault(p =>
                         string.Equals(p.Name, con.Name, StringComparison.InvariantCultureIgnoreCase));
 
                     tmp.ChangeConnStr(con.ConnStr);
                 }
 
-                return list;
+                return existinglist;
             });
     }
 

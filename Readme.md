@@ -24,29 +24,13 @@ program.cs add services
 ```cs
 services.AddSingleton<TownSuite.MultiTenant.Settings>((s) => new TownSuite.MultiTenant.Settings()
 {
-    UniqueIdDbPattern = s.GetService<IConfiguration>().GetSection("TenantSettings")
-        .GetSection("UniqueIdDbPattern").Value,
-    DecryptionKey = s.GetService<IConfiguration>().GetSection("TenantSettings").GetSection("DecryptionKey")
-        .Value,
-    ConfigReaderUrls = s.GetService<IConfiguration>().GetSection("TenantSettings").GetSection("ConfigReaderUrl")
-        .Get<string[]>()
+    return s.GetService<IConfiguration>().GetSection("TenantSettings").Get<Settings>(),
 });
-services.AddSingleton<IUniqueIdRetriever>((s) =>
-{
-    var config = s.GetService<IConfiguration>();
-    string sqlUniqueIdLookup =
-        config.GetSection("TenantSettings").GetSection("SqlUniqueIdLookup").Get<string>();
-    return new UniqueIdRetriever(sqlUniqueIdLookup);
-});
+services.AddSingleton<IUniqueIdRetriever, SqlUniqueIdRetriever>();
 services.AddSingleton<TsWebClient>((s) =>
 {
-    var config = s.GetService<IConfiguration>();
-    string userAgent =
-        config.GetSection("TenantSettings").GetSection("UserAgent").Get<string>();
-    string bearerToken =
-        config.GetSection("TenantSettings").GetSection("SqlUniqueIdLookup").Get<string>();
-    var webClient = new TsWebClient(new HttpClient(),
-        bearerToken: bearerToken, userAgent: userAgent);
+    var config = s.GetService<TownSuite.MultiTenant.Settings>();
+    var webClient = new TsWebClient(new HttpClient(), userAgent: config.UserAgent);
     return webClient;
 });
 services.AddSingleton<IConfigReader, HttpConfigReader>();
