@@ -20,6 +20,64 @@ public class ConnectionStringsTest
                 "Data Source=myServerAddress;Initial Catalog=myDataBase;User ID=myUsername;Password=myPassword"));
         Assert.That(con.Name, Is.EqualTo("app1"));
     }
+    
+    [Test]
+    public void OldSqlClientConnectionStringTest()
+    {
+        
+        /*
+         see https://github.com/dotnet/SqlClient/issues/1780 and https://github.com/dotnet/SqlClient/pull/534
+
+        Application Intent (previously ApplicationIntent)
+        Connect Retry Count (previously ConnectRetryCount)
+        Connect Retry Interval (previously ConnectRetryInterval)
+        Pool Blocking Period (previously PoolBlockingPeriod)
+        Multiple Active Result Sets (previously MultipleActiveResultSets)
+        Multiple Subnet Failover (previously MultiSubnetFailover)
+        Transparent Network IP Resolution (previously TransparentNetworkIPResolution)
+        Trust Server Certificate (previously TrustServerCertificate)
+         */
+        
+        var con = new ConnectionStrings("")
+        {
+            ConnStr = "Server=myServerAddress;Database=myDataBase;User Id=myUsername;Password=myPassword;TrustServerCertificate=True",
+            Name = "app1"
+        };
+
+        Assert.That(con.ConnStr,
+            Is.EqualTo(
+                "Data Source=myServerAddress;Initial Catalog=myDataBase;User ID=myUsername;Password=myPassword;TrustServerCertificate=True"));
+        Assert.That(con.Name, Is.EqualTo("app1"));
+    }
+    
+    [Test]
+    public void NewSqlClientConnectionStringTest()
+    {
+        
+        /*
+         see https://github.com/dotnet/SqlClient/issues/1780 and https://github.com/dotnet/SqlClient/pull/534
+
+        Application Intent (previously ApplicationIntent)
+        Connect Retry Count (previously ConnectRetryCount)
+        Connect Retry Interval (previously ConnectRetryInterval)
+        Pool Blocking Period (previously PoolBlockingPeriod)
+        Multiple Active Result Sets (previously MultipleActiveResultSets)
+        Multiple Subnet Failover (previously MultiSubnetFailover)
+        Transparent Network IP Resolution (previously TransparentNetworkIPResolution)
+        Trust Server Certificate (previously TrustServerCertificate)
+         */
+        
+        var con = new ConnectionStrings("")
+        {
+            ConnStr = "Server=myServerAddress;Database=myDataBase;User Id=myUsername;Password=myPassword;Trust Server Certificate=True",
+            Name = "app1"
+        };
+
+        Assert.That(con.ConnStr,
+            Is.EqualTo(
+                "Data Source=myServerAddress;Initial Catalog=myDataBase;User ID=myUsername;Password=myPassword;Trust Server Certificate=True"));
+        Assert.That(con.Name, Is.EqualTo("app1"));
+    }
 
     [Test]
     public void EncryptedUsernameAndPasswordConnectionStringTest()
