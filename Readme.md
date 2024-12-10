@@ -1,3 +1,12 @@
+# Summary
+
+**TownSuite.MultiTenant** is a bare-bones NuGet package designed to help a single instance of an application support multiple tenant databases. Multi-tenancy is an architecture where a single instance of a software application serves multiple customers (tenants), each with their own isolated data.
+
+### Key Features:
+
+- **Dependency Injection Setup**: Easily integrate with ASP.NET Core applications.
+- **Configuration Options**: Supports reading tenant information from `appsettings.json` or via HTTP calls.
+- **Tenant Resolution**: Resolves tenant-specific connection strings dynamically.
 
 
 # nuget package
@@ -251,4 +260,12 @@ public class Worker : BackgroundService
     }
 }
 ```
+
+# Alternatives
+
+A few alternatives
+- https://github.com/Finbuckle/Finbuckle.MultiTenant
+- https://github.com/saaskit/saaskit
+- https://github.com/OrchardCMS/OrchardCore
+
 
