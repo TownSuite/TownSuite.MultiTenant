@@ -17,19 +17,19 @@ jobs:
     - name: Setup .NET
       uses: actions/setup-dotnet@v5
       with:
-        dotnet-version: 8.0.x
+        dotnet-version: 10.0.x
     - name: Restore dependencies
       run: dotnet restore TownSuite.MultiTenant.sln
     - name: Build
       run: dotnet build TownSuite.MultiTenant.sln --no-restore -c Release
     - name: Test
-      run: cwd=`pwd` && dotnet vstest "TownSuite.MultiTenant.Tests/bin/Release/net6.0/TownSuite.MultiTenant.Tests.dll" --logger:"trx;LogFileName=$cwd/TownSuite.MultiTenant.Tests/bin/Release/net6.0/nunit-result.trx"
+      run: cwd=`pwd` && dotnet test "TownSuite.MultiTenant.Tests" --logger:"trx;LogFileName=$cwd/TownSuite.MultiTenant.Tests/bin/Release/net10.0/nunit-result.trx"
     - name: Archive test results
       uses: actions/upload-artifact@v4
       with:
         name: test-results
         path: |
-          TownSuite.MultiTenant.Tests/bin/Release/net6.0/nunit-result.trx
+          TownSuite.MultiTenant.Tests/bin/Release/net10.0/nunit-result.trx
         retention-days: 1
     - name: Publish
       run: dotnet publish TownSuite.MultiTenant.Console -c Release -r linux-x64 -p:PublishReadyToRun=true --self-contained true -p:PublishSingleFile=true -p:EnableCompressionInSingleFile=true
@@ -38,7 +38,7 @@ jobs:
       with:
         name: TownSuite.MultiTenant.Console-linux-x64
         path: |
-          TownSuite.MultiTenant.Console/bin/Release/net6.0/linux-x64/publish
+          TownSuite.MultiTenant.Console/bin/Release/net10.0/linux-x64/publish
         retention-days: 1
     
   windows-build:
@@ -48,7 +48,7 @@ jobs:
     - name: Setup .NET
       uses: actions/setup-dotnet@v5
       with:
-        dotnet-version: 8.0.x
+        dotnet-version: 10.0.x
     - name: Restore dependencies
       run: dotnet restore TownSuite.MultiTenant.sln
     - name: Build
@@ -60,7 +60,7 @@ jobs:
       with:
         name: TownSuite.MultiTenant.Console-win-x64
         path: |
-          TownSuite.MultiTenant.Console/bin/Release/net6.0/win-x64/publish
+          TownSuite.MultiTenant.Console/bin/Release/net10.0/win-x64/publish
         retention-days: 1
 
   mac-build:
@@ -70,7 +70,7 @@ jobs:
     - name: Setup .NET
       uses: actions/setup-dotnet@v5
       with:
-        dotnet-version: 8.0.x
+        dotnet-version: 10.0.x
     - name: Restore dependencies
       run: dotnet restore TownSuite.MultiTenant.sln
     - name: Build
@@ -82,5 +82,5 @@ jobs:
       with:
         name: TownSuite.MultiTenant.Console-osx-x64
         path: |
-          TownSuite.MultiTenant.Console/bin/Release/net6.0/osx-x64/publish
+          TownSuite.MultiTenant.Console/bin/Release/net10.0/osx-x64/publish
         retention-days: 1
