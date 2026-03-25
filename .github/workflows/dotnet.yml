@@ -13,9 +13,9 @@ jobs:
   linux-build:
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v6
+    - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
     - name: Setup .NET
-      uses: actions/setup-dotnet@v5
+      uses: actions/setup-dotnet@c2fa09f4bde5ebb9d1777cf28262a3eb3db3ced7  # v5.2.0
       with:
         dotnet-version: 10.0.x
     - name: Restore dependencies
@@ -25,7 +25,7 @@ jobs:
     - name: Test
       run: cwd=`pwd` && dotnet test "TownSuite.MultiTenant.Tests" --logger:"trx;LogFileName=$cwd/TownSuite.MultiTenant.Tests/bin/Release/net10.0/nunit-result.trx"
     - name: Archive test results
-      uses: actions/upload-artifact@v4
+      uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f  # v6.0.0
       with:
         name: test-results
         path: |
@@ -34,7 +34,7 @@ jobs:
     - name: Publish
       run: dotnet publish TownSuite.MultiTenant.Console -c Release -r linux-x64 -p:PublishReadyToRun=true --self-contained true -p:PublishSingleFile=true -p:EnableCompressionInSingleFile=true
     - name: Archive linux artifacts
-      uses: actions/upload-artifact@v4
+      uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f  # v6.0.0
       with:
         name: TownSuite.MultiTenant.Console-linux-x64
         path: |
@@ -44,9 +44,9 @@ jobs:
   windows-build:
     runs-on: windows-latest
     steps:
-    - uses: actions/checkout@v6
+    - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
     - name: Setup .NET
-      uses: actions/setup-dotnet@v5
+      uses: actions/setup-dotnet@c2fa09f4bde5ebb9d1777cf28262a3eb3db3ced7  # v5.2.0
       with:
         dotnet-version: 10.0.x
     - name: Restore dependencies
@@ -56,7 +56,7 @@ jobs:
     - name: Publish
       run: dotnet publish TownSuite.MultiTenant.Console -c Release -r win-x64 -p:PublishReadyToRun=true --self-contained true -p:PublishSingleFile=true -p:EnableCompressionInSingleFile=true
     - name: Archive windows artifacts
-      uses: actions/upload-artifact@v4
+      uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f  # v6.0.0
       with:
         name: TownSuite.MultiTenant.Console-win-x64
         path: |
@@ -66,9 +66,9 @@ jobs:
   mac-build:
     runs-on: macos-latest
     steps:
-    - uses: actions/checkout@v6
+    - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
     - name: Setup .NET
-      uses: actions/setup-dotnet@v5
+      uses: actions/setup-dotnet@c2fa09f4bde5ebb9d1777cf28262a3eb3db3ced7  # v5.2.0
       with:
         dotnet-version: 10.0.x
     - name: Restore dependencies
@@ -78,7 +78,7 @@ jobs:
     - name: Publish
       run: dotnet publish TownSuite.MultiTenant.Console -c Release -r osx-x64 -p:PublishReadyToRun=true --self-contained true -p:PublishSingleFile=true -p:EnableCompressionInSingleFile=true
     - name: Archive mac artifacts
-      uses: actions/upload-artifact@v4
+      uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f  # v6.0.0
       with:
         name: TownSuite.MultiTenant.Console-osx-x64
         path: |
