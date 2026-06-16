@@ -158,7 +158,15 @@ layout: default
         <h2 style="font-family:'Space Grotesk',sans-serif;font-weight:600;font-size:31px;letter-spacing:-.015em;color:var(--ink);margin:12px 0 0">The naming convention does the routing</h2>
         <p style="font-size:15.5px;line-height:1.65;color:var(--ink-2);max-width:46em;margin:14px 0 0">Each connection string is keyed by a tenant (or alias) and the app/database type it belongs to. The resolver matches an incoming tenant id against those keys to assemble that tenant's set of connections.</p>
 
-        <div style="background:var(--code);border-radius:14px;padding:30px 26px;margin-top:26px;text-align:center">
+        <div style="border:1px solid var(--line);border-radius:14px;background:#f4f7fb;padding:22px 24px;margin-top:22px">
+          <div style="font:600 11px/1 'JetBrains Mono',monospace;letter-spacing:.14em;text-transform:uppercase;color:var(--brand);margin-bottom:10px">In plain English — the school office</div>
+          <p style="font-size:14.5px;line-height:1.65;color:var(--ink-2);margin:0">Every tenant has <strong style="color:var(--ink)">one real ID</strong> that never changes (e.g. <code style="font-family:'JetBrains Mono',monospace;font-size:12.5px;color:var(--brand)">tenant1</code>) — the <strong style="color:var(--ink)">unique id</strong>. The same tenant can also go by nicknames, like a website hostname (<code style="font-family:'JetBrains Mono',monospace;font-size:12.5px;color:var(--brand)">developer.townsuite.com</code>) — those are <strong style="color:var(--ink)">aliases</strong>. The resolver keeps a notebook pointing every nickname at the real ID, so whichever name you ask with, you get the same tenant back — its connections and app settings.</p>
+          <pre style="margin:14px 0 0;padding:14px 16px;background:var(--code);border-radius:10px;overflow:auto;font:500 12.5px/1.7 'JetBrains Mono',monospace;color:#cdd9e6"><code>developer.townsuite.com  → tenant1
+tenant1                  → tenant1   (the real ID points to itself too)</code></pre>
+          <p style="font-size:13.5px;line-height:1.6;color:var(--ink-2);margin:12px 0 0"><strong style="color:var(--ink)">Aliases</strong> come from the connection-string names (the part before the <code style="font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--brand)">_</code>). <strong style="color:var(--ink)">The real ID</strong> comes from the HTTP response's <code style="font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--brand)">tenantId</code> — or, for <code style="font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--brand)">appsettings.json</code>, the unique-id lookup you supply. In a web app the name you ask with is usually the request's hostname.</p>
+        </div>
+
+        <div style="background:var(--code);border-radius:14px;padding:30px 26px;margin-top:18px;text-align:center">
           <div style="font:600 10px/1 'JetBrains Mono',monospace;letter-spacing:.18em;text-transform:uppercase;color:#5e7591;margin-bottom:18px">Connection string key</div>
           <div style="display:inline-flex;align-items:center;font-family:'JetBrains Mono',monospace;font-weight:600;font-size:clamp(18px,3.4vw,28px);letter-spacing:-.01em">
             <span style="color:#79b8ff">{tenant/alias}</span><span style="color:#8aa0b6;margin:0 2px">_</span><span style="color:#f0a85c">{name/dbType}</span>
@@ -335,9 +343,10 @@ public class ExampleController : ControllerBase
     [HttpGet]
     public async Task&lt;IActionResult&gt; Get(string tenantId)
     {
-        var tenant = await _resolver.Resolve(tenantId);
+        var tenant = _resolver.Resolve(tenantId);
+        if (tenant is null) return NotFound();
 
-        await using var conn = new SqlConnection(tenant.Connections["app1"]);
+        await using var conn = new SqlConnection(tenant.GetConnectionString("app1"));
         await conn.OpenAsync();
         var data = await conn.QueryAsync("SELECT * FROM exampleTable2");
 
@@ -381,7 +390,7 @@ public static class TenantExtensions
         {
             await _resolver.ResolveAll();
 
-            foreach (var tenant in _resolver.Tenants)
+            foreach (var tenant in _resolver.Tenants.Values)
             {
                 await using var conn = tenant.CreateConnection("app1");
                 await conn.OpenAsync();

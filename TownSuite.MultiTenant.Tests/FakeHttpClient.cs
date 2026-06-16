@@ -35,6 +35,16 @@ public class FakeHttpClient : TsWebClient
                 Key = "a.dns.record.as.tenant.townsuite.com_app1",
                 Value = "tenant 1 alias"
             });
+            tenant1.AppSettings.Add(new KeyValuePairOfStringAndString()
+            {
+                Key = "FeatureX",
+                Value = "enabled"
+            });
+            tenant1.AppSettings.Add(new KeyValuePairOfStringAndString()
+            {
+                Key = "Region",
+                Value = "us-east"
+            });
             var tenant2 = new WebSearchResponse()
             {
                 TenantId = "tenant2",

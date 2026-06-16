@@ -14,6 +14,12 @@ public interface IConfigReader
     /// </summary>
     string GetConnection(string tenant, string appType);
 
+    /// <summary>
+    /// Returns the app settings for a tenant (by unique id or alias). Returns an
+    /// empty dictionary when the tenant is unknown or has no app settings.
+    /// </summary>
+    IReadOnlyDictionary<string, string> GetAppSettings(string tenant);
+
     IList<string> GetTenantIds();
 
     /// <summary>

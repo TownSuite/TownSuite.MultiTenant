@@ -9,6 +9,40 @@
 - **Tenant Resolution**: Resolves tenant-specific connection strings dynamically.
 
 
+# How tenant resolution works (in plain English)
+
+Think of a school office.
+
+Every customer (a **tenant**) has **one real ID** that never changes — e.g. `tenant1`.
+That's the **unique id**.
+
+But the same tenant can be called by different nicknames — like a website hostname
+(`developer.townsuite.com`). Those are **aliases**.
+
+The library keeps a little notebook that points every nickname at the real ID:
+
+```
+developer.townsuite.com  → tenant1
+tenant1                  → tenant1   (the real ID points to itself too)
+```
+
+So whichever name you ask for, you get the **same** tenant back — its connection
+strings and its app settings.
+
+**Where the names come from:**
+
+- **Aliases** come from the connection string names. A connection named
+  `developer.townsuite.com_app1` makes `developer.townsuite.com` an alias (the part
+  before the `_`).
+- **The real ID** comes from the config source: an HTTP response says
+  `"tenantId": "tenant1"` directly; for `appsettings.json` it's worked out by the
+  unique-id lookup you provide.
+
+In a web app, the "name you ask with" is usually the **hostname from the incoming
+request**, which you hand to `resolver.Resolve(host)` (or `ResolveAsync`) to get the
+right tenant.
+
+
 # nuget package
 
 Build the project in Release mode.  It will produce a nuget package in the bin folder.  Upload it to your nuget repository or point the nuget source at the folder.  Have fun.
@@ -133,9 +167,10 @@ public class ExampleController : ControllerBase
     [HttpGet()]
     public async Task<IActionResult> Get(string tenantId)
     {
-        var tenant = await _resolver.Resolve(tenantId);
+        var tenant = _resolver.Resolve(tenantId);
+        if (tenant is null) return NotFound();
 
-        await using var conn = new SqlConnection(tenant.Connections["app1"]);
+        await using var conn = new SqlConnection(tenant.GetConnectionString("app1"));
         await conn.OpenAsync();
         var data = await conn.QueryAsync("SELECT * FROM exampleTable2");
 
@@ -167,6 +202,11 @@ Settings that are required to make an http call and read the output
 
 The expected data format from an http service is json that matches the below example.
 
+`tenantId` is the authoritative canonical id: a response's connections are grouped
+under it directly (no per-connection lookup needed). The optional `appSettings` are
+surfaced on `Tenant.AppSettings`. If a response omits `tenantId`, the id is resolved
+via the unique-id lookup you supplied instead.
+
 ```json
 [
     {
@@ -179,6 +219,12 @@ The expected data format from an http service is json that matches the below exa
             {
                 "key": "app2",
                 "value": "CONNECTIONSTRING PLACEHOLDER"
+            }
+        ],
+        "appSettings": [
+            {
+                "key": "FeatureX",
+                "value": "enabled"
             }
         ]
     },
@@ -193,7 +239,8 @@ The expected data format from an http service is json that matches the below exa
                 "key": "app2",
                 "value": "CONNECTIONSTRING PLACEHOLDER"
             }
-        ]
+        ],
+        "appSettings": []
     }
 ]
 ```
@@ -223,9 +270,10 @@ public class ExampleController : ControllerBase
     [HttpGet()]
     public async Task<IActionResult> Get(string tenantId)
     {
-        var tenant = await _resolver.Resolve(tenantId);
+        var tenant = _resolver.Resolve(tenantId);
+        if (tenant is null) return NotFound();
 
-        await using var conn = new SqlConnection(tenant.Connections["app1"]);
+        await using var conn = new SqlConnection(tenant.GetConnectionString("app1"));
         await conn.OpenAsync();
         var data = await conn.QueryAsync("SELECT * FROM exampleTable2");
 
@@ -247,7 +295,7 @@ public static class TenantExtensions
 {
     public static DbConnection CreateConnection(this Tenant tenant, string appName)
     {
-        return new SqlConnection(tenant.Connections[appName]);
+        return new SqlConnection(tenant.GetConnectionString(appName));
     }
 }
 ```
@@ -277,7 +325,7 @@ public class Worker : BackgroundService
 
             await _resolver.ResolveAll();
 
-            foreach (var tenant in _resolver.Tenants)
+            foreach (var tenant in _resolver.Tenants.Values)
             {
                 // example: do stuff with tenants app1 databases
                 await using var conn =  tenant.CreateConnection("app1");

@@ -29,17 +29,25 @@ public abstract class ConfigReader : IConfigReader
     private sealed class Cache
     {
         public Cache(ConcurrentDictionary<string, IList<ConnectionStrings>> connections,
-            ConcurrentDictionary<string, string> aliasToUniqueId)
+            ConcurrentDictionary<string, string> aliasToUniqueId,
+            ConcurrentDictionary<string, IReadOnlyDictionary<string, string>> appSettings)
         {
             Connections = connections;
             AliasToUniqueId = aliasToUniqueId;
+            AppSettings = appSettings;
         }
 
         public ConcurrentDictionary<string, IList<ConnectionStrings>> Connections { get; }
         public ConcurrentDictionary<string, string> AliasToUniqueId { get; }
+        public ConcurrentDictionary<string, IReadOnlyDictionary<string, string>> AppSettings { get; }
 
-        public static Cache CreateEmpty() => new(new(), new(StringComparer.InvariantCultureIgnoreCase));
+        public static Cache CreateEmpty() =>
+            new(new(), new(StringComparer.InvariantCultureIgnoreCase),
+                new(StringComparer.InvariantCultureIgnoreCase));
     }
+
+    private static readonly IReadOnlyDictionary<string, string> _emptyAppSettings =
+        new Dictionary<string, string>();
 
     private volatile Cache _cache = Cache.CreateEmpty();
     private readonly IUniqueIdRetriever _uniqueIdRetriever;
@@ -112,6 +120,14 @@ public abstract class ConfigReader : IConfigReader
             ?.ConnStr ?? "";
     }
 
+    public IReadOnlyDictionary<string, string> GetAppSettings(string tenant)
+    {
+        var cache = _cache;
+        var key = ResolveKey(cache, tenant);
+
+        return cache.AppSettings.TryGetValue(key, out var settings) ? settings : _emptyAppSettings;
+    }
+
     private static string ResolveKey(Cache cache, string tenant)
     {
         if (!string.IsNullOrWhiteSpace(tenant) && cache.AliasToUniqueId.TryGetValue(tenant, out var uniqueId))
@@ -174,11 +190,12 @@ public abstract class ConfigReader : IConfigReader
         // concurrent readers always see either the previous or the new data set,
         // never a half-built one.
         var target = new ConcurrentDictionary<string, IList<ConnectionStrings>>();
+        var appSettings = new ConcurrentDictionary<string, IReadOnlyDictionary<string, string>>();
         Interlocked.Exchange(ref _lastLoadErrorCount, 0);
 
-        await LoadConnectionsAsync(target, cancellationToken).ConfigureAwait(false);
+        await LoadConnectionsAsync(target, appSettings, cancellationToken).ConfigureAwait(false);
 
-        _cache = new Cache(target, BuildAliasIndex(target));
+        _cache = new Cache(target, BuildAliasIndex(target), appSettings);
     }
 
     /// <summary>
@@ -214,11 +231,14 @@ public abstract class ConfigReader : IConfigReader
 
     /// <summary>
     /// Implementation-specific load of all tenant connection strings into
-    /// <paramref name="target"/>. Always invoked under the refresh lock; the base
-    /// class publishes <paramref name="target"/> atomically once this completes.
+    /// <paramref name="target"/> (keyed by canonical unique id) and any per-tenant
+    /// app settings into <paramref name="appSettings"/>. Always invoked under the
+    /// refresh lock; the base class publishes both atomically once this completes.
     /// </summary>
     protected abstract Task LoadConnectionsAsync(
-        ConcurrentDictionary<string, IList<ConnectionStrings>> target, CancellationToken cancellationToken);
+        ConcurrentDictionary<string, IList<ConnectionStrings>> target,
+        ConcurrentDictionary<string, IReadOnlyDictionary<string, string>> appSettings,
+        CancellationToken cancellationToken);
 
     /// <summary>
     /// Clear the cache without reloading.
@@ -286,6 +306,13 @@ public abstract class ConfigReader : IConfigReader
         return _patternCache.GetOrAdd(pattern,
             p => new Regex(p, RegexOptions.IgnoreCase | RegexOptions.Compiled));
     }
+
+    /// <summary>
+    /// Adds a connection directly under a known canonical unique id (used when the
+    /// config source already provides the tenant id, so no lookup is needed).
+    /// </summary>
+    protected static void AddConnection(ConcurrentDictionary<string, IList<ConnectionStrings>> target,
+        ConnectionStrings con, string uniqueId) => AddOrUpdateCons(target, con, uniqueId);
 
     private static void AddOrUpdateCons(ConcurrentDictionary<string, IList<ConnectionStrings>> target,
         ConnectionStrings con, string uniqueId)

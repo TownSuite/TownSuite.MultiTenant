@@ -4,17 +4,21 @@ public class Tenant : ICloneable, IEquatable<Tenant>
 {
     private readonly Dictionary<string, string> _connections;
     private readonly List<string> _aliases;
+    private readonly Dictionary<string, string> _appSettings;
 
     public Tenant(string uniqueId)
-        : this(uniqueId, new Dictionary<string, string>(), new List<string>())
+        : this(uniqueId, new Dictionary<string, string>(), new List<string>(),
+            new Dictionary<string, string>())
     {
     }
 
-    private Tenant(string uniqueId, Dictionary<string, string> connections, List<string> aliases)
+    private Tenant(string uniqueId, Dictionary<string, string> connections, List<string> aliases,
+        Dictionary<string, string> appSettings)
     {
         UniqueId = uniqueId;
         _connections = connections;
         _aliases = aliases;
+        _appSettings = appSettings;
     }
 
     public string UniqueId { get; }
@@ -29,6 +33,13 @@ public class Tenant : ICloneable, IEquatable<Tenant>
     /// Read-only view of the tenant's aliases. Use <see cref="TryAddAlias"/> to populate.
     /// </summary>
     public IReadOnlyList<string> Aliases => _aliases;
+
+    /// <summary>
+    /// Read-only view of the tenant's app settings (delivered alongside the
+    /// connection strings by the config source). Use <see cref="TryAddAppSetting"/>
+    /// to populate.
+    /// </summary>
+    public IReadOnlyDictionary<string, string> AppSettings => _appSettings;
 
     /// <summary>
     /// Adds a connection string if one with the same name is not already present.
@@ -60,18 +71,34 @@ public class Tenant : ICloneable, IEquatable<Tenant>
         return true;
     }
 
+    /// <summary>
+    /// Adds an app setting if the key is not already present.
+    /// </summary>
+    /// <returns>true if added, false if the key already existed.</returns>
+    public bool TryAddAppSetting(string key, string value)
+    {
+        if (_appSettings.ContainsKey(key))
+        {
+            return false;
+        }
+
+        _appSettings.Add(key, value);
+        return true;
+    }
+
     public object Clone()
     {
         // Deep copy the collections so mutations to the clone (e.g. adding an
         // alias) do not leak back into the original instance.
-        return new Tenant(UniqueId, new Dictionary<string, string>(_connections), new List<string>(_aliases));
+        return new Tenant(UniqueId, new Dictionary<string, string>(_connections), new List<string>(_aliases),
+            new Dictionary<string, string>(_appSettings));
     }
 
     /// <summary>
-    /// Two tenants are considered equal when they share the same UniqueId and
-    /// the exact same set of connection strings. Aliases are intentionally not
-    /// part of equality: they are derived values that may differ between an
-    /// alias-keyed clone and a freshly resolved tenant.
+    /// Two tenants are considered equal when they share the same UniqueId, the
+    /// exact same connection strings, and the exact same app settings. Aliases are
+    /// intentionally not part of equality: they are derived values that may differ
+    /// between an alias-keyed clone and a freshly resolved tenant.
     /// </summary>
     public bool Equals(Tenant? other)
     {
@@ -90,19 +117,20 @@ public class Tenant : ICloneable, IEquatable<Tenant>
             return false;
         }
 
-        if (_connections.Count != other._connections.Count)
+        return DictionariesEqual(_connections, other._connections)
+               && DictionariesEqual(_appSettings, other._appSettings);
+    }
+
+    private static bool DictionariesEqual(Dictionary<string, string> a, Dictionary<string, string> b)
+    {
+        if (a.Count != b.Count)
         {
             return false;
         }
 
-        foreach (var item in _connections)
+        foreach (var item in a)
         {
-            if (!other._connections.TryGetValue(item.Key, out var otherValue))
-            {
-                return false;
-            }
-
-            if (!string.Equals(otherValue, item.Value))
+            if (!b.TryGetValue(item.Key, out var otherValue) || !string.Equals(otherValue, item.Value))
             {
                 return false;
             }
@@ -119,8 +147,8 @@ public class Tenant : ICloneable, IEquatable<Tenant>
     public override int GetHashCode()
     {
         // Only UniqueId participates so the hash code stays stable even as the
-        // (mutable) connection collection is populated. Equality still does the
-        // full connection comparison.
+        // (mutable) collections are populated. Equality still does the full
+        // connection/app-setting comparison.
         return UniqueId?.GetHashCode() ?? 0;
     }
 }

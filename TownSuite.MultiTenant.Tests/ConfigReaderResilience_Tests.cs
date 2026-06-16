@@ -59,8 +59,16 @@ public class ConfigReaderResilience_Tests
     [Test]
     public async Task Refresh_WhenSomeTenantsFail_LoadsTheRestAndCountsErrors()
     {
-        var reader = new HttpConfigReader(Mock.Of<ILogger<HttpConfigReader>>(), new FailsTenant2(),
-            new FakeHttpClient(new HttpClient(), ""), settings);
+        // The AppSettings reader resolves ids via the retriever (appsettings.json
+        // has no TenantId), so a failing lookup exercises the per-tenant error path.
+        var config = new ConfigurationBuilder()
+            .AddJsonFile("appsettings_reader_test.json")
+            .AddEnvironmentVariables()
+            .Build();
+        var appSettings = config.GetSection("TenantSettings").Get<Settings>()!;
+
+        var reader = new AppSettingsConfigReader(config, Mock.Of<ILogger<AppSettingsConfigReader>>(),
+            new FailsTenant2(), appSettings);
 
         await reader.Refresh();
 

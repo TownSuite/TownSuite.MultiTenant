@@ -19,8 +19,12 @@ public class AppSettingsConfigReader : ConfigReader
     /// Loads tenant data from the ConnectionStrings section of configuration.
     /// </summary>
     protected override async Task LoadConnectionsAsync(
-        ConcurrentDictionary<string, IList<ConnectionStrings>> target, CancellationToken cancellationToken)
+        ConcurrentDictionary<string, IList<ConnectionStrings>> target,
+        ConcurrentDictionary<string, IReadOnlyDictionary<string, string>> appSettings,
+        CancellationToken cancellationToken)
     {
+        // The ConnectionStrings section carries no app settings, so appSettings is
+        // left empty for this source.
         var connections = _configuration.GetSection("ConnectionStrings").GetChildren();
         var conns = new List<ConnectionStrings>();
 

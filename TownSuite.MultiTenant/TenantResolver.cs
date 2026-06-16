@@ -99,6 +99,11 @@ public class TenantResolver
             t.TryAddAlias(connection.TenantOrAlias);
         }
 
+        foreach (var setting in _reader.GetAppSettings(uniqueId))
+        {
+            t.TryAddAppSetting(setting.Key, setting.Value);
+        }
+
         if (!t.Connections.Any())
         {
             _logger?.LogCritical(
