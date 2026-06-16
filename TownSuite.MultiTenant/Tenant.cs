@@ -73,7 +73,7 @@ public class Tenant : ICloneable, IEquatable<Tenant>
     /// part of equality: they are derived values that may differ between an
     /// alias-keyed clone and a freshly resolved tenant.
     /// </summary>
-    public bool Equals(Tenant other)
+    public bool Equals(Tenant? other)
     {
         if (other is null)
         {
@@ -111,7 +111,7 @@ public class Tenant : ICloneable, IEquatable<Tenant>
         return true;
     }
 
-    public override bool Equals(object obj)
+    public override bool Equals(object? obj)
     {
         return Equals(obj as Tenant);
     }

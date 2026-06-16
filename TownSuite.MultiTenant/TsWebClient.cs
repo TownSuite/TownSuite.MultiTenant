@@ -7,9 +7,9 @@ namespace TownSuite.MultiTenant;
 
 public class TsWebClient
 {
-    private readonly HttpClient _httpClient;
-    private readonly IHttpClientFactory _httpClientFactory;
-    private readonly string _clientName;
+    private readonly HttpClient? _httpClient;
+    private readonly IHttpClientFactory? _httpClientFactory;
+    private readonly string? _clientName;
     private readonly string _userAgent;
 
     /// <summary>
@@ -42,7 +42,10 @@ public class TsWebClient
             throw new TownSuiteException("User-Agent is required.");
         }
 
-        var client = _httpClientFactory?.CreateClient(_clientName) ?? _httpClient;
+        // Exactly one of the two constructors ran, so the matching field is set.
+        var client = _httpClientFactory != null
+            ? _httpClientFactory.CreateClient(_clientName!)
+            : _httpClient!;
 
         using var request = new HttpRequestMessage(HttpMethod.Get,
             new Uri(url, UriKind.RelativeOrAbsolute));
@@ -77,7 +80,7 @@ public class TsWebClient
         return result;
     }
 
-    private static async Task<T> ReadObjectResponseAsync<T>(HttpResponseMessage response,
+    private static async Task<T?> ReadObjectResponseAsync<T>(HttpResponseMessage response,
         CancellationToken cancellationToken)
     {
         if (response.Content == null)
@@ -102,29 +105,31 @@ public class TsWebClient
 
 public class WebSearchResponse
 {
-    [JsonPropertyName("tenantId")] public string TenantId { get; set; }
+    [JsonPropertyName("tenantId")] public string TenantId { get; set; } = "";
 
     [JsonPropertyName("connections")]
-    public ICollection<KeyValuePairOfStringAndString> Connections { get; set; }
+    public ICollection<KeyValuePairOfStringAndString> Connections { get; set; } =
+        new List<KeyValuePairOfStringAndString>();
 
     [JsonPropertyName("appSettings")]
-    public ICollection<KeyValuePairOfStringAndString> AppSettings { get; set; }
+    public ICollection<KeyValuePairOfStringAndString> AppSettings { get; set; } =
+        new List<KeyValuePairOfStringAndString>();
 }
 
 public class KeyValuePairOfStringAndString
 {
-    [JsonPropertyName("key")] public string Key { get; set; }
+    [JsonPropertyName("key")] public string Key { get; set; } = "";
 
-    [JsonPropertyName("value")] public string Value { get; set; }
+    [JsonPropertyName("value")] public string Value { get; set; } = "";
 }
 
 public class ApiException : Exception
 {
     public int StatusCode { get; }
 
-    public string Response { get; }
+    public string? Response { get; }
 
-    public ApiException(string message, int statusCode, string response, Exception innerException = null)
+    public ApiException(string message, int statusCode, string? response, Exception? innerException = null)
         : base(message + "\n\nStatus: " + statusCode, innerException)
     {
         StatusCode = statusCode;

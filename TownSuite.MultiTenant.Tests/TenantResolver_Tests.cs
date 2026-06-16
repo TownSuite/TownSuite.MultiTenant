@@ -6,8 +6,8 @@ namespace TownSuite.MultiTenant.Tests;
 
 public class TenantResolver_Tests
 {
-    private IConfiguration config;
-    private Settings settings;
+    private IConfiguration config = null!;
+    private Settings settings = null!;
 
     [SetUp]
     public void Setup()
@@ -17,7 +17,7 @@ public class TenantResolver_Tests
             .AddEnvironmentVariables()
             .Build();
 
-        settings = config.GetSection("TenantSettings").Get<Settings>();
+        settings = config.GetSection("TenantSettings").Get<Settings>()!;
     }
     
     [Test]

@@ -65,7 +65,7 @@ public class TenantResolver
         return t;
     }
 
-    public async Task<Tenant> ResolveAsync(string tenantId, bool reset = false,
+    public async Task<Tenant?> ResolveAsync(string tenantId, bool reset = false,
         CancellationToken cancellationToken = default)
     {
         if (string.IsNullOrWhiteSpace(tenantId))
@@ -106,7 +106,7 @@ public class TenantResolver
         return ModifyTenantDictionary(tenantId, reset, t);
     }
 
-    public Tenant Resolve(string tenantId)
+    public Tenant? Resolve(string tenantId)
     {
         if (string.IsNullOrWhiteSpace(tenantId))
         {

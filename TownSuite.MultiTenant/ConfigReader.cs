@@ -171,7 +171,7 @@ public abstract class ConfigReader : IConfigReader
         try
         {
             await _lookupThrottle.WaitAsync(cancellationToken).ConfigureAwait(false);
-            string uniqueId;
+            string? uniqueId;
             try
             {
                 uniqueId = await _uniqueIdRetriever.GetUniqueId(con, configPairs, cancellationToken)

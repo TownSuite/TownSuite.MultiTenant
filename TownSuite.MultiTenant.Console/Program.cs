@@ -64,6 +64,11 @@ var builder = new ConfigurationBuilder()
 var configurationRoot = builder.Build();
 
 var settings = configurationRoot.GetSection("TenantSettings").Get<TownSuite.MultiTenant.Settings>();
+if (settings is null)
+{
+    Console.WriteLine("TenantSettings configuration section is missing.");
+    Environment.Exit(1);
+}
 
 using var loggerFactory = LoggerFactory.Create(builder =>
 {

@@ -22,8 +22,8 @@ public class ConnectionStrings
         _decryptionKey = decryptionKey;
     }
 
-    public string Name { get; init; }
-    private string _connStr;
+    public string Name { get; init; } = "";
+    private string _connStr = "";
 
     public string ConnStr
     {
@@ -34,12 +34,19 @@ public class ConnectionStrings
     /// <summary>
     /// The tenant or alias portion of <see cref="Name"/> (text before the first '_').
     /// </summary>
-    public string TenantOrAlias => Name?.Split('_').FirstOrDefault();
+    public string TenantOrAlias => Name.Split('_')[0];
 
     /// <summary>
     /// The application type portion of <see cref="Name"/> (text after the last '_').
     /// </summary>
-    public string AppType => Name?.Split('_').LastOrDefault();
+    public string AppType
+    {
+        get
+        {
+            var parts = Name.Split('_');
+            return parts[parts.Length - 1];
+        }
+    }
 
     /// <summary>
     /// Replaces the stored connection string with an already-decrypted value.
@@ -140,15 +147,14 @@ public class ConnectionStrings
         return Convert.TryFromBase64String(base64, buffer, out int bytesParsed);
     }
 
-    private string Decrypt(string cipherString)
+    private string Decrypt(string? cipherString)
     {
         if (string.IsNullOrEmpty(cipherString)) return string.Empty;
-        byte[] keyArray = null;
 
         byte[] toEncryptArray = Convert.FromBase64String(cipherString);
 
         using var hashmd5 = MD5.Create();
-        keyArray = hashmd5.ComputeHash(Encoding.UTF8.GetBytes(_decryptionKey));
+        byte[] keyArray = hashmd5.ComputeHash(Encoding.UTF8.GetBytes(_decryptionKey));
         hashmd5.Clear();
 
         using var tdes = TripleDES.Create();

@@ -157,11 +157,10 @@ public class ConnectionStringsTest
     private string Encrypt(string toEncrypt, string key)
     {
         if (string.IsNullOrEmpty(toEncrypt)) return string.Empty;
-        byte[] keyArray = null;
         byte[] toEncryptArray = Encoding.UTF8.GetBytes(toEncrypt);
 
         using var hashmd5 = MD5.Create();
-        keyArray = hashmd5.ComputeHash(Encoding.UTF8.GetBytes(key));
+        byte[] keyArray = hashmd5.ComputeHash(Encoding.UTF8.GetBytes(key));
         hashmd5.Clear();
 
         using var tdes = TripleDES.Create();

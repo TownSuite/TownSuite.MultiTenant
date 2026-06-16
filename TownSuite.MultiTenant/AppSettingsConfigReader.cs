@@ -24,7 +24,8 @@ public class AppSettingsConfigReader : ConfigReader
         var connections = _configuration.GetSection("ConnectionStrings").GetChildren();
         var conns = new List<ConnectionStrings>();
 
-        var firstSettingsRecord = _settings.ConfigPairs.FirstOrDefault();
+        // The base constructor guarantees at least one config pair.
+        var firstSettingsRecord = _settings.ConfigPairs[0];
 
         string pattern = firstSettingsRecord.UniqueIdDbPattern;
 
@@ -32,7 +33,7 @@ public class AppSettingsConfigReader : ConfigReader
         foreach (var connection in connections)
         {
             var con = new ConnectionStrings(firstSettingsRecord.DecryptionKey)
-                { Name = connection.Key, ConnStr = connection.Value };
+                { Name = connection.Key, ConnStr = connection.Value ?? "" };
             conns.Add(con);
             tasks.Add(InitializeUniqueIds(target, con, pattern, firstSettingsRecord, cancellationToken));
         }

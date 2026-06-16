@@ -2,47 +2,23 @@ namespace TownSuite.MultiTenant.Tests;
 
 public class IdFaker : IUniqueIdRetriever
 {
-    public Task<string> GetUniqueId(ConnectionStrings con, AppSettingsConfigPairs configPairs,
+    public Task<string?> GetUniqueId(ConnectionStrings con, AppSettingsConfigPairs configPairs,
         CancellationToken cancellationToken = default)
     {
+        string? uniqueId = con.Name switch
+        {
+            var n when n.StartsWith("a.dns.record") => "tenant1",
+            var n when n.StartsWith("tenant1_") => "tenant1",
+            var n when n.StartsWith("tenant2_") => "tenant2",
+            var n when n.StartsWith("second.dns.record") => "tenant2",
+            var n when n.StartsWith("tenant3_") => "tenant3",
+            var n when n.StartsWith("tenant4_") => "tenant4",
+            var n when n.StartsWith("tenant5_") => "tenant5",
+            var n when n.StartsWith("fifth.dns.record") => "tenant5",
+            var n when n.StartsWith("tenant6_") => "tenant6",
+            _ => ""
+        };
 
-        if (con.Name.StartsWith("a.dns.record"))
-        {
-            return Task.FromResult($"tenant1");
-        }
-        if (con.Name.StartsWith("tenant1_"))
-        {
-            return Task.FromResult($"tenant1");
-        }
-        if (con.Name.StartsWith("tenant2_"))
-        {
-            return Task.FromResult($"tenant2");
-        }
-        if (con.Name.StartsWith("second.dns.record"))
-        {
-            return Task.FromResult($"tenant2");
-        }
-        if (con.Name.StartsWith("tenant3_"))
-        {
-            return Task.FromResult($"tenant3");
-        }
-        if (con.Name.StartsWith("tenant4_"))
-        {
-            return Task.FromResult($"tenant4");
-        }
-        if (con.Name.StartsWith("tenant5_"))
-        {
-            return Task.FromResult($"tenant5");
-        }
-        if (con.Name.StartsWith("fifth.dns.record"))
-        {
-            return Task.FromResult($"tenant5");
-        }
-        if (con.Name.StartsWith("tenant6_"))
-        {
-            return Task.FromResult($"tenant6");
-        }
-        
-        return Task.FromResult("");
+        return Task.FromResult<string?>(uniqueId);
     }
 }
