@@ -1,0 +1,75 @@
+using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.DependencyInjection.Extensions;
+
+namespace TownSuite.MultiTenant;
+
+/// <summary>
+/// Where tenant connection data is read from.
+/// </summary>
+public enum TenantConfigSource
+{
+    /// <summary>Read tenant data from the configured HTTP endpoints (<see cref="HttpConfigReader"/>).</summary>
+    Http,
+
+    /// <summary>Read tenant data from the ConnectionStrings section (<see cref="AppSettingsConfigReader"/>).</summary>
+    AppSettings
+}
+
+public static class ServiceCollectionExtensions
+{
+    private const string TsWebClientName = "TownSuite.MultiTenant.TsWebClient";
+
+    /// <summary>
+    /// Registers everything needed to resolve multi-tenant connection strings:
+    /// <see cref="Settings"/>, an <see cref="IUniqueIdRetriever"/>, an
+    /// <see cref="IConfigReader"/> for the chosen <paramref name="source"/>, and
+    /// the <see cref="TenantResolver"/>. All are registered as singletons so the
+    /// tenant cache is shared process-wide.
+    /// </summary>
+    public static IServiceCollection AddTownSuiteMultiTenant(
+        this IServiceCollection services,
+        IConfiguration configuration,
+        TenantConfigSource source = TenantConfigSource.Http,
+        string settingsSectionName = "TenantSettings")
+    {
+        var settings = configuration.GetSection(settingsSectionName).Get<Settings>()
+                       ?? throw new TownSuiteException(
+                           $"Configuration section '{settingsSectionName}' is missing or could not be bound to Settings.");
+
+        // The readers depend on ILogger<T>; AppSettingsConfigReader also depends on
+        // IConfiguration. Register both defensively (no-ops if the host already did)
+        // so the graph resolves regardless of host setup.
+        services.AddLogging();
+        services.TryAddSingleton(configuration);
+
+        services.AddSingleton(settings);
+        services.AddSingleton<IUniqueIdRetriever, SqlUniqueIdRetriever>();
+
+        switch (source)
+        {
+            case TenantConfigSource.Http:
+                // Use IHttpClientFactory so the underlying handler pool is managed
+                // (DNS refresh, no socket exhaustion) rather than holding a raw
+                // `new HttpClient()`.
+                services.AddHttpClient(TsWebClientName);
+                services.AddSingleton<TsWebClient>(sp =>
+                {
+                    var httpClient = sp.GetRequiredService<IHttpClientFactory>().CreateClient(TsWebClientName);
+                    return new TsWebClient(httpClient, settings.UserAgent);
+                });
+                services.AddSingleton<IConfigReader, HttpConfigReader>();
+                break;
+
+            case TenantConfigSource.AppSettings:
+                services.AddSingleton<IConfigReader, AppSettingsConfigReader>();
+                break;
+
+            default:
+                throw new ArgumentOutOfRangeException(nameof(source), source, "Unsupported tenant config source.");
+        }
+
+        services.AddSingleton<TenantResolver>();
+        return services;
+    }
+}

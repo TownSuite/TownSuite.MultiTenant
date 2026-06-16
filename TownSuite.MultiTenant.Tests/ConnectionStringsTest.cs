@@ -113,6 +113,34 @@ public class ConnectionStringsTest
         Assert.That(con.Name, Is.EqualTo("app1"));
     }
 
+    [Test]
+    public void EncryptionPrefix_ForcesDecryptTest()
+    {
+        string cipher = Encrypt("Server=myServerAddress;Database=myDataBase;User Id=myUsername;Password=myPassword;",
+            "abc");
+        var con = new ConnectionStrings("abc")
+        {
+            ConnStr = ConnectionStrings.EncryptionPrefix + cipher,
+            Name = "app1"
+        };
+
+        Assert.That(con.ConnStr,
+            Is.EqualTo("Server=myServerAddress;Database=myDataBase;User Id=myUsername;Password=myPassword;"));
+    }
+
+    [Test]
+    public void TenantOrAlias_And_AppType_AreParsed()
+    {
+        var con = new ConnectionStrings("")
+        {
+            ConnStr = "Server=s;Database=d;User Id=u;Password=p;",
+            Name = "tenant1_WebService"
+        };
+
+        Assert.That(con.TenantOrAlias, Is.EqualTo("tenant1"));
+        Assert.That(con.AppType, Is.EqualTo("WebService"));
+    }
+
     private string Encrypt(string toEncrypt, string key)
     {
         if (string.IsNullOrEmpty(toEncrypt)) return string.Empty;

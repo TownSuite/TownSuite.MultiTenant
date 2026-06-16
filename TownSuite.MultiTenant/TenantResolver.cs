@@ -10,7 +10,11 @@ public class TenantResolver
 
     private readonly ConcurrentDictionary<string, Tenant> _tenants = new();
 
-    public ConcurrentDictionary<string, Tenant> Tenants => _tenants;
+    /// <summary>
+    /// Read-only view of the resolved tenants. Use <see cref="ResolveAsync"/> /
+    /// <see cref="ResolveAll"/> to populate and <see cref="Clear"/> to reset.
+    /// </summary>
+    public IReadOnlyDictionary<string, Tenant> Tenants => _tenants;
 
     public TenantResolver(ILogger<TenantResolver> logger, IConfigReader reader)
     {
@@ -54,7 +58,7 @@ public class TenantResolver
             // Auto fill in settings for tenant for that unique id.  This avoids the need to also
             // have a duplicated connectionstring with the unique id.
             var t2 = (Tenant)t.Clone();
-            t2.Aliases.Add(t2.UniqueId);
+            t2.TryAddAlias(t2.UniqueId);
             UpdateTenantDictionary(t2.UniqueId, t2);
         }
 
@@ -86,16 +90,8 @@ public class TenantResolver
         var t = new Tenant(tenantId);
         foreach (var connection in connections)
         {
-            if (!t.Connections.ContainsKey(connection.Name))
-            {
-                t.Connections.Add(connection.Name, connection.ConnStr);
-            }
-
-            string alias = connection.Name.Split("_")[0];
-            if (!t.Aliases.Contains(alias))
-            {
-                t.Aliases.Add(alias);
-            }
+            t.TryAddConnection(connection.Name, connection.ConnStr);
+            t.TryAddAlias(connection.TenantOrAlias);
         }
 
         if (!t.Connections.Any())
@@ -117,12 +113,9 @@ public class TenantResolver
             return null;
         }
 
-        if (_tenants.TryGetValue(tenantId, out var resolve))
-        {
-            return resolve;
-        }
-
-        return SetupTenant(tenantId, reset: false);
+        return _tenants.TryGetValue(tenantId, out var resolve)
+            ? resolve
+            : SetupTenant(tenantId, reset: false);
     }
 
     public async Task ResolveAll(CancellationToken cancellationToken = default)

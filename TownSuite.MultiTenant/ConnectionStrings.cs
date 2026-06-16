@@ -6,6 +6,15 @@ namespace TownSuite.MultiTenant;
 
 public class ConnectionStrings
 {
+    /// <summary>
+    /// Optional explicit marker for a fully-encrypted connection string. When a
+    /// value starts with this prefix the remainder is always treated as
+    /// ciphertext, avoiding the base64 false-positive heuristic. Values without
+    /// the prefix continue to use the legacy auto-detection for backwards
+    /// compatibility.
+    /// </summary>
+    public const string EncryptionPrefix = "enc:";
+
     private readonly string _decryptionKey;
 
     public ConnectionStrings(string decryptionKey)
@@ -22,31 +31,50 @@ public class ConnectionStrings
         init { _connStr = DeCryptConnectionString(value); }
     }
 
+    /// <summary>
+    /// The tenant or alias portion of <see cref="Name"/> (text before the first '_').
+    /// </summary>
+    public string TenantOrAlias => Name?.Split('_').FirstOrDefault();
+
+    /// <summary>
+    /// The application type portion of <see cref="Name"/> (text after the last '_').
+    /// </summary>
+    public string AppType => Name?.Split('_').LastOrDefault();
+
     public void ChangeConnStr(string connStr)
     {
         _connStr = connStr;
     }
-    
-    private string DeCryptConnectionString(
-        string cnStr)
+
+    private string DeCryptConnectionString(string cnStr)
     {
-        
-        bool isOldStyle = !IsMicrosoftDataConnectionString(cnStr);
-        
+        string raw = cnStr ?? "";
+        bool explicitlyEncrypted = raw.StartsWith(EncryptionPrefix, StringComparison.Ordinal);
+        if (explicitlyEncrypted)
+        {
+            raw = raw.Substring(EncryptionPrefix.Length);
+        }
+
+        bool isOldStyle = !IsMicrosoftDataConnectionString(raw);
+
         SqlConnectionStringBuilder csb;
 
         try
         {
-            if (IsBase64String(cnStr ?? ""))
+            if (explicitlyEncrypted || IsBase64String(raw))
             {
-                return isOldStyle ? RevertToSystemDataSqlClientCompatibleConnectionString(Decrypt(cnStr ?? "")) : Decrypt(cnStr ?? "");
+                return isOldStyle
+                    ? RevertToSystemDataSqlClientCompatibleConnectionString(Decrypt(raw))
+                    : Decrypt(raw);
             }
-            csb = new SqlConnectionStringBuilder(cnStr);
+
+            csb = new SqlConnectionStringBuilder(raw);
         }
-        catch (Exception ex)
+        catch (Exception)
         {
-            Console.WriteLine("Warning, Connection string is not encrypted.");
-            return cnStr;
+            // The value is not an encrypted/parseable connection string; treat it
+            // as plaintext and return it unchanged.
+            return raw;
         }
 
         try
@@ -57,9 +85,9 @@ public class ConnectionStrings
                 csb["password"] = Decrypt(encryptedPassword?.ToString());
             }
         }
-        catch (Exception ex)
+        catch (Exception)
         {
-            Console.WriteLine("Warning, Connection string password is not encrypted.");
+            // Password segment is not encrypted; leave it as-is.
         }
 
         try
@@ -70,12 +98,14 @@ public class ConnectionStrings
                 csb["User Id"] = Decrypt(encryptedUsername?.ToString());
             }
         }
-        catch (Exception ex)
+        catch (Exception)
         {
-            Console.Error.WriteLine(new TownSuiteException("Connection string userid is not encrypted.", ex));
+            // User id segment is not encrypted; leave it as-is.
         }
 
-        return isOldStyle ? RevertToSystemDataSqlClientCompatibleConnectionString(csb.ConnectionString) : csb.ConnectionString;
+        return isOldStyle
+            ? RevertToSystemDataSqlClientCompatibleConnectionString(csb.ConnectionString)
+            : csb.ConnectionString;
     }
 
     private static bool IsBase64String(string base64)
@@ -120,7 +150,7 @@ public class ConnectionStrings
         sb.Replace("Trust Server Certificate", "TrustServerCertificate");
         return sb.ToString();
     }
-    
+
     private bool IsMicrosoftDataConnectionString(string cnStr)
     {
         /*

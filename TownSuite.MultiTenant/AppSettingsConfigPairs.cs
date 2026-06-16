@@ -1,6 +1,6 @@
 namespace TownSuite.MultiTenant;
 
-public class AppSettingsConfigPairs
+public record AppSettingsConfigPairs
 {
     public string Id { get; init; }
     public string[] ConfigReaderUrls { get; init; }

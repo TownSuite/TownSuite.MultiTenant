@@ -2,25 +2,69 @@ namespace TownSuite.MultiTenant;
 
 public class Tenant : ICloneable, IEquatable<Tenant>
 {
+    private readonly Dictionary<string, string> _connections;
+    private readonly List<string> _aliases;
+
     public Tenant(string uniqueId)
+        : this(uniqueId, new Dictionary<string, string>(), new List<string>())
     {
-        this.UniqueId = uniqueId;
-        this.Aliases = new List<string>();
     }
 
-    public Dictionary<string, string> Connections { get; init; } = new Dictionary<string, string>();
-    public IList<string> Aliases { get; init; } = new List<string>();
-    public string UniqueId { get; init; }
+    private Tenant(string uniqueId, Dictionary<string, string> connections, List<string> aliases)
+    {
+        UniqueId = uniqueId;
+        _connections = connections;
+        _aliases = aliases;
+    }
+
+    public string UniqueId { get; }
+
+    /// <summary>
+    /// Read-only view of the tenant's connection strings keyed by connection name.
+    /// Use <see cref="TryAddConnection"/> to populate.
+    /// </summary>
+    public IReadOnlyDictionary<string, string> Connections => _connections;
+
+    /// <summary>
+    /// Read-only view of the tenant's aliases. Use <see cref="TryAddAlias"/> to populate.
+    /// </summary>
+    public IReadOnlyList<string> Aliases => _aliases;
+
+    /// <summary>
+    /// Adds a connection string if one with the same name is not already present.
+    /// </summary>
+    /// <returns>true if added, false if a connection with that name already existed.</returns>
+    public bool TryAddConnection(string name, string connectionString)
+    {
+        if (_connections.ContainsKey(name))
+        {
+            return false;
+        }
+
+        _connections.Add(name, connectionString);
+        return true;
+    }
+
+    /// <summary>
+    /// Adds an alias if it is not already present.
+    /// </summary>
+    /// <returns>true if added, false if the alias already existed.</returns>
+    public bool TryAddAlias(string alias)
+    {
+        if (_aliases.Contains(alias))
+        {
+            return false;
+        }
+
+        _aliases.Add(alias);
+        return true;
+    }
 
     public object Clone()
     {
         // Deep copy the collections so mutations to the clone (e.g. adding an
         // alias) do not leak back into the original instance.
-        return new Tenant(UniqueId)
-        {
-            Aliases = new List<string>(this.Aliases),
-            Connections = new Dictionary<string, string>(this.Connections),
-        };
+        return new Tenant(UniqueId, new Dictionary<string, string>(_connections), new List<string>(_aliases));
     }
 
     /// <summary>
@@ -46,14 +90,14 @@ public class Tenant : ICloneable, IEquatable<Tenant>
             return false;
         }
 
-        if (Connections.Count != other.Connections.Count)
+        if (_connections.Count != other._connections.Count)
         {
             return false;
         }
 
-        foreach (var item in Connections)
+        foreach (var item in _connections)
         {
-            if (!other.Connections.TryGetValue(item.Key, out var otherValue))
+            if (!other._connections.TryGetValue(item.Key, out var otherValue))
             {
                 return false;
             }

@@ -16,6 +16,8 @@ public abstract class ConfigReader : IConfigReader
     /// </summary>
     private const int MaxConcurrentUniqueIdLookups = 8;
 
+    private static readonly ConcurrentDictionary<string, Regex> _patternCache = new();
+
     protected ConcurrentDictionary<string, IList<ConnectionStrings>> _connections = new();
     private readonly IUniqueIdRetriever _uniqueIdRetriever;
     protected readonly Settings _settings;
@@ -26,8 +28,14 @@ public abstract class ConfigReader : IConfigReader
 
     protected ConfigReader(IUniqueIdRetriever uniqueIdRetriever, Settings settings)
     {
-        _uniqueIdRetriever = uniqueIdRetriever;
-        _settings = settings;
+        _uniqueIdRetriever = uniqueIdRetriever ?? throw new ArgumentNullException(nameof(uniqueIdRetriever));
+        _settings = settings ?? throw new ArgumentNullException(nameof(settings));
+
+        if (settings.ConfigPairs == null || settings.ConfigPairs.Length == 0)
+        {
+            throw new TownSuiteException(
+                "TenantSettings.ConfigPairs is missing or empty. Configure at least one config pair.");
+        }
     }
 
     public IList<ConnectionStrings> GetConnections(string tenant)
@@ -45,8 +53,8 @@ public abstract class ConfigReader : IConfigReader
         }
 
         return conns
-            .FirstOrDefault(p => string.Equals(p.Name.Split("_").LastOrDefault(), appType,
-                StringComparison.InvariantCultureIgnoreCase))?.ConnStr ?? "";
+            .FirstOrDefault(p => string.Equals(p.AppType, appType, StringComparison.InvariantCultureIgnoreCase))
+            ?.ConnStr ?? "";
     }
 
     /// <summary>
@@ -115,14 +123,12 @@ public abstract class ConfigReader : IConfigReader
     protected async Task InitializeUniqueIds(ConnectionStrings con, string pattern, AppSettingsConfigPairs configPairs,
         CancellationToken cancellationToken = default)
     {
-        string? tenant = con.Name.Split("_").FirstOrDefault();
-        if (string.IsNullOrWhiteSpace(tenant))
+        if (string.IsNullOrWhiteSpace(con.TenantOrAlias))
         {
             return;
         }
 
-        Match m = Regex.Match(con.Name, pattern, RegexOptions.IgnoreCase);
-        if (!m.Success)
+        if (!GetRegex(pattern).IsMatch(con.Name))
         {
             Exceptions.Add(new TownSuiteException($"{con.Name} did not match pattern {pattern}"));
             return;
@@ -150,6 +156,12 @@ public abstract class ConfigReader : IConfigReader
         }
     }
 
+    private static Regex GetRegex(string pattern)
+    {
+        return _patternCache.GetOrAdd(pattern,
+            p => new Regex(p, RegexOptions.IgnoreCase | RegexOptions.Compiled));
+    }
+
     private void AddOrUpdateCons(ConnectionStrings con, string uniqueId)
     {
         _connections.AddOrUpdate(uniqueId,
@@ -174,26 +186,48 @@ public abstract class ConfigReader : IConfigReader
 
     protected void GroupDatabasesByTenant(List<ConnectionStrings> conns)
     {
-        // This method will find all connection strings that follow the {tenant/alias}_{name/dbType} pattern
-        // that were not found to match the DatabaseWithUniqueId pattern
-        // and add them to the _connections dictionary with the UniqueId as the key.
-
-        foreach (var con in conns)
+        // Find all connection strings that follow the {tenant/alias}_{name/dbType}
+        // pattern and attach them to every tenant that already owns a connection
+        // sharing the same tenant/alias prefix.
+        //
+        // An alias -> tenantKey index is built once up front so this runs in
+        // roughly linear time instead of scanning every tenant for every
+        // connection. The per-tenant alias set is stable while grouping (a
+        // connection is only ever added to a tenant whose alias it already
+        // matches), so the prebuilt index stays correct.
+        var aliasIndex = new Dictionary<string, List<string>>(StringComparer.InvariantCultureIgnoreCase);
+        foreach (var entry in _connections)
         {
-            string conTenantOrAlias = con.Name.Split("_").FirstOrDefault();
-
-            foreach (var tenantKey in _connections.Keys)
+            foreach (var existing in entry.Value)
             {
-                var found = _connections[tenantKey].Any(c =>
-                    string.Equals(c.Name.Split("_").FirstOrDefault(),
-                        conTenantOrAlias, StringComparison.InvariantCultureIgnoreCase));
-
-                if (!found)
+                var alias = existing.TenantOrAlias;
+                if (string.IsNullOrEmpty(alias))
                 {
                     continue;
                 }
 
-                AddOrUpdateCons(con, tenantKey);
+                if (!aliasIndex.TryGetValue(alias, out var keys))
+                {
+                    keys = new List<string>();
+                    aliasIndex[alias] = keys;
+                }
+
+                if (!keys.Contains(entry.Key))
+                {
+                    keys.Add(entry.Key);
+                }
+            }
+        }
+
+        foreach (var con in conns)
+        {
+            if (!string.IsNullOrEmpty(con.TenantOrAlias)
+                && aliasIndex.TryGetValue(con.TenantOrAlias, out var tenantKeys))
+            {
+                foreach (var tenantKey in tenantKeys)
+                {
+                    AddOrUpdateCons(con, tenantKey);
+                }
             }
         }
     }

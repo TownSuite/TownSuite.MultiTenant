@@ -1,13 +1,19 @@
 using System.Data.Common;
 using Microsoft.Data.SqlClient;
-using TownSuite.MultiTenant;
+
+namespace TownSuite.MultiTenant;
 
 public static class TenantExtensions
 {
+    /// <summary>
+    /// Creates a <see cref="DbConnection"/> for the first connection whose name
+    /// contains <paramref name="appName"/> (case-insensitive). The match is a
+    /// literal substring, not a regular expression, so names containing
+    /// characters like '.' match as written.
+    /// </summary>
+    /// <exception cref="TownSuiteException">No connection matches <paramref name="appName"/>.</exception>
     public static DbConnection CreateConnection(this Tenant tenant, string appName)
     {
-        // appName is treated as a literal connection-key fragment, not a regex,
-        // so values containing characters like '.' match as written.
         var match = tenant.Connections
             .FirstOrDefault(p => p.Key.Contains(appName, StringComparison.OrdinalIgnoreCase));
 

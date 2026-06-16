@@ -28,19 +28,33 @@ Remove the {} and replace the tenant and connectionstring with the real values.
 
 ## DI setup
 
-program.cs add services
+In `Program.cs`, register everything with the provided extension method. It binds
+`Settings` from the `TenantSettings` configuration section, wires up an
+`IHttpClientFactory`-backed `TsWebClient`, the chosen `IConfigReader`, and the
+`TenantResolver` — all as singletons so the tenant cache is shared process-wide.
 
 ```cs
-services.AddSingleton<TownSuite.MultiTenant.Settings>((s) => new TownSuite.MultiTenant.Settings()
-{
-    return s.GetService<IConfiguration>().GetSection("TenantSettings").Get<Settings>(),
-});
+using TownSuite.MultiTenant;
+
+// Read tenant data over HTTP (default):
+builder.Services.AddTownSuiteMultiTenant(builder.Configuration);
+
+// ...or read tenant data from the ConnectionStrings section of appsettings.json:
+builder.Services.AddTownSuiteMultiTenant(builder.Configuration, TenantConfigSource.AppSettings);
+```
+
+If you prefer to wire the services up by hand instead of using the extension:
+
+```cs
+services.AddSingleton(s =>
+    s.GetRequiredService<IConfiguration>().GetSection("TenantSettings").Get<Settings>());
 services.AddSingleton<IUniqueIdRetriever, SqlUniqueIdRetriever>();
-services.AddSingleton<TsWebClient>((s) =>
+services.AddHttpClient(nameof(TsWebClient));
+services.AddSingleton<TsWebClient>(s =>
 {
-    var config = s.GetService<TownSuite.MultiTenant.Settings>();
-    var webClient = new TsWebClient(new HttpClient(), userAgent: config.UserAgent);
-    return webClient;
+    var config = s.GetRequiredService<Settings>();
+    var httpClient = s.GetRequiredService<IHttpClientFactory>().CreateClient(nameof(TsWebClient));
+    return new TsWebClient(httpClient, userAgent: config.UserAgent);
 });
 services.AddSingleton<IConfigReader, HttpConfigReader>();
 services.AddSingleton<TenantResolver>();
