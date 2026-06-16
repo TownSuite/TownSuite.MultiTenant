@@ -62,11 +62,32 @@ public class ConnectionStrings
 
         bool isOldStyle = !IsMicrosoftDataConnectionString(raw);
 
+        if (explicitlyEncrypted)
+        {
+            // The caller explicitly marked this value as encrypted, so a failed
+            // decrypt is a hard error rather than something to silently pass
+            // through as plaintext (which would only surface as a confusing SQL
+            // error later).
+            try
+            {
+                var decrypted = Decrypt(raw);
+                return isOldStyle
+                    ? RevertToSystemDataSqlClientCompatibleConnectionString(decrypted)
+                    : decrypted;
+            }
+            catch (Exception ex)
+            {
+                throw new TownSuiteException(
+                    $"Failed to decrypt connection string '{Name}' marked with the '{EncryptionPrefix}' prefix.",
+                    ex);
+            }
+        }
+
         SqlConnectionStringBuilder csb;
 
         try
         {
-            if (explicitlyEncrypted || IsBase64String(raw))
+            if (IsBase64String(raw))
             {
                 return isOldStyle
                     ? RevertToSystemDataSqlClientCompatibleConnectionString(Decrypt(raw))

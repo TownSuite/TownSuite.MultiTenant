@@ -129,6 +129,19 @@ public class ConnectionStringsTest
     }
 
     [Test]
+    public void EncryptionPrefix_InvalidCiphertext_Throws()
+    {
+        Assert.Throws<TownSuiteException>(() =>
+        {
+            _ = new ConnectionStrings("abc")
+            {
+                Name = "app1",
+                ConnStr = ConnectionStrings.EncryptionPrefix + "!!!not-valid-base64!!!"
+            };
+        });
+    }
+
+    [Test]
     public void TenantOrAlias_And_AppType_AreParsed()
     {
         var con = new ConnectionStrings("")

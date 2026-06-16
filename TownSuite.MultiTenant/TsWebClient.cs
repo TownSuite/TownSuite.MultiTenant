@@ -47,7 +47,10 @@ public class TsWebClient
         using var request = new HttpRequestMessage(HttpMethod.Get,
             new Uri(url, UriKind.RelativeOrAbsolute));
         request.Headers.Accept.Add(MediaTypeWithQualityHeaderValue.Parse("application/json"));
-        request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", bearerToken);
+        if (!string.IsNullOrWhiteSpace(bearerToken))
+        {
+            request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", bearerToken);
+        }
         request.Headers.Add("User-Agent", _userAgent);
 
         using var response = await client
@@ -122,15 +125,13 @@ public class ApiException : Exception
     public string Response { get; }
 
     public ApiException(string message, int statusCode, string response, Exception innerException = null)
-        : base(message + "\n\nStatus: " + statusCode + "\nResponse: \n" +
-               (response == null ? "(null)" : response.Substring(0, Math.Min(response.Length, 512))), innerException)
+        : base(message + "\n\nStatus: " + statusCode, innerException)
     {
         StatusCode = statusCode;
+        // Kept for deliberate inspection only. Deliberately NOT included in the
+        // message or ToString(): the config endpoint deals in connection strings,
+        // and exceptions are typically logged, so embedding the body risks leaking
+        // secrets into logs.
         Response = response;
-    }
-
-    public override string ToString()
-    {
-        return $"HTTP Response: \n\n{Response}\n\n{base.ToString()}";
     }
 }

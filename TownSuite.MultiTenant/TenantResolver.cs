@@ -18,8 +18,8 @@ public class TenantResolver
 
     public TenantResolver(ILogger<TenantResolver> logger, IConfigReader reader)
     {
-        _logger = logger;
-        _reader = reader;
+        _logger = logger ?? throw new ArgumentNullException(nameof(logger));
+        _reader = reader ?? throw new ArgumentNullException(nameof(reader));
     }
 
     private void UpdateTenantDictionary(string tenantId, Tenant t)
