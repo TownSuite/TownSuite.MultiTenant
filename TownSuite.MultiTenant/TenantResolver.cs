@@ -85,9 +85,14 @@ public class TenantResolver
 
     private Tenant SetupTenant(string tenantId, bool reset)
     {
-        var connections = _reader.GetConnections(tenantId).OrderBy(p => p.Name);
+        // tenantId may be an alias (e.g. a DNS hostname). Resolve it to the
+        // canonical unique id so the Tenant is built under its real id and is
+        // also reachable by that id, not just the alias that was requested.
+        var uniqueId = _reader.ResolveUniqueId(tenantId) ?? tenantId;
 
-        var t = new Tenant(tenantId);
+        var connections = _reader.GetConnections(uniqueId).OrderBy(p => p.Name);
+
+        var t = new Tenant(uniqueId);
         foreach (var connection in connections)
         {
             t.TryAddConnection(connection.Name, connection.ConnStr);
@@ -98,7 +103,7 @@ public class TenantResolver
         {
             _logger?.LogCritical(
                 "Tenant {TenantId} has no connection strings.  Review the appsettings.json/environment variables.",
-                t.UniqueId);
+                tenantId);
 
             return t;
         }

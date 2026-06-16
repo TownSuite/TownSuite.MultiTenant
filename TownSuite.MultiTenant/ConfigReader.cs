@@ -19,7 +19,29 @@ public abstract class ConfigReader : IConfigReader
 
     private static readonly ConcurrentDictionary<string, Regex> _patternCache = new();
 
-    private volatile ConcurrentDictionary<string, IList<ConnectionStrings>> _connections = new();
+    /// <summary>
+    /// Immutable-by-convention snapshot of loaded tenant data. Connections are
+    /// keyed by canonical unique id; AliasToUniqueId maps every alias (and each
+    /// unique id, to itself) to its canonical unique id. Both are published
+    /// together via a single reference swap so readers never see a mismatched or
+    /// half-built pair.
+    /// </summary>
+    private sealed class Cache
+    {
+        public Cache(ConcurrentDictionary<string, IList<ConnectionStrings>> connections,
+            ConcurrentDictionary<string, string> aliasToUniqueId)
+        {
+            Connections = connections;
+            AliasToUniqueId = aliasToUniqueId;
+        }
+
+        public ConcurrentDictionary<string, IList<ConnectionStrings>> Connections { get; }
+        public ConcurrentDictionary<string, string> AliasToUniqueId { get; }
+
+        public static Cache CreateEmpty() => new(new(), new(StringComparer.InvariantCultureIgnoreCase));
+    }
+
+    private volatile Cache _cache = Cache.CreateEmpty();
     private readonly IUniqueIdRetriever _uniqueIdRetriever;
     private readonly ILogger _logger;
     protected readonly Settings _settings;
@@ -49,17 +71,38 @@ public abstract class ConfigReader : IConfigReader
         }
     }
 
+    /// <summary>
+    /// Resolve a tenant alias (e.g. a DNS hostname) or unique id to its canonical
+    /// unique id. Returns the unique id unchanged when passed one, or null when
+    /// the alias/id is unknown. Matching is case-insensitive.
+    /// </summary>
+    public string? ResolveUniqueId(string aliasOrUniqueId)
+    {
+        if (string.IsNullOrWhiteSpace(aliasOrUniqueId))
+        {
+            return null;
+        }
+
+        return _cache.AliasToUniqueId.TryGetValue(aliasOrUniqueId, out var uniqueId) ? uniqueId : null;
+    }
+
     public IList<ConnectionStrings> GetConnections(string tenant)
     {
+        var cache = _cache;
+        var key = ResolveKey(cache, tenant);
+
         // Return a copy so callers cannot mutate the cached list.
-        return _connections.TryGetValue(tenant, out var conns)
+        return cache.Connections.TryGetValue(key, out var conns)
             ? new List<ConnectionStrings>(conns)
             : new List<ConnectionStrings>();
     }
 
     public string GetConnection(string tenant, string appType)
     {
-        if (!_connections.TryGetValue(tenant, out var conns))
+        var cache = _cache;
+        var key = ResolveKey(cache, tenant);
+
+        if (!cache.Connections.TryGetValue(key, out var conns))
         {
             return "";
         }
@@ -67,6 +110,16 @@ public abstract class ConfigReader : IConfigReader
         return conns
             .FirstOrDefault(p => string.Equals(p.AppType, appType, StringComparison.InvariantCultureIgnoreCase))
             ?.ConnStr ?? "";
+    }
+
+    private static string ResolveKey(Cache cache, string tenant)
+    {
+        if (!string.IsNullOrWhiteSpace(tenant) && cache.AliasToUniqueId.TryGetValue(tenant, out var uniqueId))
+        {
+            return uniqueId;
+        }
+
+        return tenant;
     }
 
     /// <summary>
@@ -125,7 +178,38 @@ public abstract class ConfigReader : IConfigReader
 
         await LoadConnectionsAsync(target, cancellationToken).ConfigureAwait(false);
 
-        _connections = target;
+        _cache = new Cache(target, BuildAliasIndex(target));
+    }
+
+    /// <summary>
+    /// Builds the alias -> canonical unique id lookup from loaded connections.
+    /// Every unique id maps to itself; every connection's tenant/alias prefix
+    /// maps to the unique id it belongs to. Unique-id identities are added first
+    /// so a real unique id always wins over an alias that happens to collide.
+    /// </summary>
+    private static ConcurrentDictionary<string, string> BuildAliasIndex(
+        ConcurrentDictionary<string, IList<ConnectionStrings>> connections)
+    {
+        var index = new ConcurrentDictionary<string, string>(StringComparer.InvariantCultureIgnoreCase);
+
+        foreach (var uniqueId in connections.Keys)
+        {
+            index.TryAdd(uniqueId, uniqueId);
+        }
+
+        foreach (var entry in connections)
+        {
+            foreach (var con in entry.Value)
+            {
+                var alias = con.TenantOrAlias;
+                if (!string.IsNullOrEmpty(alias))
+                {
+                    index.TryAdd(alias, entry.Key);
+                }
+            }
+        }
+
+        return index;
     }
 
     /// <summary>
@@ -141,12 +225,12 @@ public abstract class ConfigReader : IConfigReader
     /// </summary>
     public void Clear()
     {
-        _connections.Clear();
+        _cache = Cache.CreateEmpty();
     }
 
     public bool IsSetup()
     {
-        return !_connections.IsEmpty;
+        return !_cache.Connections.IsEmpty;
     }
 
     protected async Task InitializeUniqueIds(ConcurrentDictionary<string, IList<ConnectionStrings>> target,
@@ -291,6 +375,6 @@ public abstract class ConfigReader : IConfigReader
 
     public IList<string> GetTenantIds()
     {
-        return _connections.Keys.ToList();
+        return _cache.Connections.Keys.ToList();
     }
 }

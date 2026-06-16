@@ -17,6 +17,13 @@ public interface IConfigReader
     IList<string> GetTenantIds();
 
     /// <summary>
+    /// Resolve a tenant alias (e.g. a DNS hostname) or unique id to its canonical
+    /// unique id. Returns the unique id unchanged when passed one, or null when
+    /// the alias/id is unknown. Matching is case-insensitive.
+    /// </summary>
+    string? ResolveUniqueId(string aliasOrUniqueId);
+
+    /// <summary>
     /// Force a full reload of tenant data. Safe to call concurrently; callers are
     /// serialized so only one reload runs at a time.
     /// </summary>
