@@ -269,7 +269,7 @@ public abstract class ConfigReader : IConfigReader
             if (string.IsNullOrWhiteSpace(uniqueId))
             {
                 _exceptions.Add(new TownSuiteException(
-                    $"Tenant {con.Name} resolved to an empty unique id. Check the SqlUniqueIdLookup query."));
+                    $"Tenant {con.Name} resolved to an empty unique id. Check the configured unique-id lookup."));
                 return;
             }
 

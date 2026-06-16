@@ -93,7 +93,7 @@ using var csv = new CsvWriter(writer, CultureInfo.InvariantCulture);
 try
 {
     var resolver = new TenantResolver(loggerResolver,
-        new HttpConfigReader(loggerReader, new SqlUniqueIdRetriever(),
+        new HttpConfigReader(loggerReader, new UniqueIdRetriever(),
             new TsWebClient(new HttpClient(), settings.UserAgent),
             settings));
     resolver.Clear();

@@ -30,9 +30,9 @@ Remove the {} and replace the tenant and connectionstring with the real values.
 
 The library never references a database provider. It resolves and caches
 connection strings; **you** supply how a tenant's canonical unique id is looked
-up, via a `UniqueIdLookup` delegate (or an `IUniqueIdRetriever`). A SQL Server
-reference implementation (`SqlUniqueIdRetriever`, using `Microsoft.Data.SqlClient`)
-lives in the Console project — copy it into your host, or write your own.
+up, via a `UniqueIdLookup` delegate (or an `IUniqueIdRetriever`). A reference
+implementation (`UniqueIdRetriever`, using `Microsoft.Data.SqlClient`) lives in
+the Console project — copy it into your host, or write your own.
 
 `Tenant.GetConnectionString(appName)` returns the connection string for an app;
 constructing a `DbConnection` from it is the host's job (see the Console's
@@ -51,11 +51,11 @@ using TownSuite.MultiTenant;
 
 // Provide the lookup as a delegate (open the tenant connection, run a query, etc.):
 builder.Services.AddTownSuiteMultiTenant(builder.Configuration,
-    (con, configPairs, ct) => new SqlUniqueIdRetriever().GetUniqueId(con, configPairs, ct));
+    (con, configPairs, ct) => new UniqueIdRetriever().GetUniqueId(con, configPairs, ct));
 
 // ...or pass an IUniqueIdRetriever instance, and/or read from appsettings.json:
 builder.Services.AddTownSuiteMultiTenant(builder.Configuration,
-    new SqlUniqueIdRetriever(), TenantConfigSource.AppSettings);
+    new UniqueIdRetriever(), TenantConfigSource.AppSettings);
 ```
 
 If you prefer to wire the services up by hand instead of using the extension:
@@ -64,7 +64,7 @@ If you prefer to wire the services up by hand instead of using the extension:
 const string httpClientName = "TownSuite.MultiTenant.TsWebClient";
 services.AddSingleton(s =>
     s.GetRequiredService<IConfiguration>().GetSection("TenantSettings").Get<Settings>());
-services.AddSingleton<IUniqueIdRetriever>(new SqlUniqueIdRetriever()); // your implementation
+services.AddSingleton<IUniqueIdRetriever>(new UniqueIdRetriever()); // your implementation
 services.AddHttpClient(httpClientName);
 services.AddSingleton<TsWebClient>(s =>
 {
@@ -98,7 +98,7 @@ Read tenant information from a appsettings.json file.
             "Id": 1,
             "DecryptionKey": "PLACEHOLDER",
             "UniqueIdDbPattern": ".*_Web",
-            "SqlUniqueIdLookup": "SELECT Top 1 Id FROM ExampleTable"
+            "UniqueIdLookup": "SELECT Top 1 Id FROM ExampleTable"
         }
     ],
     "UserAgent": "TownSuite-MultiTenant-Console Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:109.0) Gecko/20100101 Firefox/115.0"
@@ -158,7 +158,7 @@ Settings that are required to make an http call and read the output
             "ConfigReaderUrlBearerToken": "PLACEHOLDER",
             "DecryptionKey": "PLACEHOLDER",
             "UniqueIdDbPattern": ".*_Web",
-            "SqlUniqueIdLookup": "SELECT Top 1 Id FROM ExampleTable"
+            "UniqueIdLookup": "SELECT Top 1 Id FROM ExampleTable"
         }
     ],
     "UserAgent": "TownSuite-MultiTenant-Console Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:109.0) Gecko/20100101 Firefox/115.0"

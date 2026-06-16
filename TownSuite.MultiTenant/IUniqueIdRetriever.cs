@@ -9,7 +9,7 @@ public interface IUniqueIdRetriever
 /// <summary>
 /// Resolves the canonical unique id for a tenant connection. Supply your own
 /// implementation (the library is database-agnostic; e.g. open the connection
-/// and run <see cref="AppSettingsConfigPairs.SqlUniqueIdLookup"/>, or look the id
+/// and run <see cref="AppSettingsConfigPairs.UniqueIdLookup"/>, or look the id
 /// up however you like).
 /// </summary>
 public delegate Task<string?> UniqueIdLookup(ConnectionStrings con, AppSettingsConfigPairs appSettingsConfigPairs,
