@@ -17,14 +17,28 @@ public class ServiceCollectionExtensions_Tests
     public void AddTownSuiteMultiTenant_Http_ResolvesGraph()
     {
         var services = new ServiceCollection();
-        services.AddTownSuiteMultiTenant(BuildConfig("http_reader_test.json"));
+        var retriever = new IdFaker();
+        services.AddTownSuiteMultiTenant(BuildConfig("http_reader_test.json"), retriever);
 
         using var provider = services.BuildServiceProvider();
 
         Assert.That(provider.GetService<Settings>(), Is.Not.Null);
-        Assert.That(provider.GetService<IUniqueIdRetriever>(), Is.InstanceOf<SqlUniqueIdRetriever>());
+        Assert.That(provider.GetService<IUniqueIdRetriever>(), Is.SameAs(retriever));
         Assert.That(provider.GetService<TsWebClient>(), Is.Not.Null);
         Assert.That(provider.GetService<IConfigReader>(), Is.InstanceOf<HttpConfigReader>());
+        Assert.That(provider.GetService<TenantResolver>(), Is.Not.Null);
+    }
+
+    [Test]
+    public void AddTownSuiteMultiTenant_AcceptsDelegateLookup()
+    {
+        var services = new ServiceCollection();
+        services.AddTownSuiteMultiTenant(BuildConfig("http_reader_test.json"),
+            (con, _, _) => Task.FromResult<string?>(con.TenantOrAlias));
+
+        using var provider = services.BuildServiceProvider();
+
+        Assert.That(provider.GetService<IUniqueIdRetriever>(), Is.InstanceOf<DelegateUniqueIdRetriever>());
         Assert.That(provider.GetService<TenantResolver>(), Is.Not.Null);
     }
 
@@ -32,7 +46,7 @@ public class ServiceCollectionExtensions_Tests
     public void AddTownSuiteMultiTenant_AppSettings_ResolvesReader()
     {
         var services = new ServiceCollection();
-        services.AddTownSuiteMultiTenant(BuildConfig("appsettings_reader_test.json"),
+        services.AddTownSuiteMultiTenant(BuildConfig("appsettings_reader_test.json"), new IdFaker(),
             TenantConfigSource.AppSettings);
 
         using var provider = services.BuildServiceProvider();
@@ -46,7 +60,7 @@ public class ServiceCollectionExtensions_Tests
     {
         var services = new ServiceCollection();
         Assert.Throws<TownSuiteException>(() =>
-            services.AddTownSuiteMultiTenant(BuildConfig("http_reader_test.json"),
+            services.AddTownSuiteMultiTenant(BuildConfig("http_reader_test.json"), new IdFaker(),
                 settingsSectionName: "DoesNotExist"));
     }
 }

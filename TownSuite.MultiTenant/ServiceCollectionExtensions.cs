@@ -21,8 +21,23 @@ public static class ServiceCollectionExtensions
     private const string TsWebClientName = "TownSuite.MultiTenant.TsWebClient";
 
     /// <summary>
+    /// Registers everything needed to resolve multi-tenant connection strings,
+    /// using the supplied <paramref name="uniqueIdLookup"/> delegate to resolve a
+    /// tenant's canonical unique id (the library is database-agnostic, so you
+    /// provide this — e.g. open the connection and run a query).
+    /// </summary>
+    public static IServiceCollection AddTownSuiteMultiTenant(
+        this IServiceCollection services,
+        IConfiguration configuration,
+        UniqueIdLookup uniqueIdLookup,
+        TenantConfigSource source = TenantConfigSource.Http,
+        string settingsSectionName = "TenantSettings") =>
+        services.AddTownSuiteMultiTenant(configuration, new DelegateUniqueIdRetriever(uniqueIdLookup), source,
+            settingsSectionName);
+
+    /// <summary>
     /// Registers everything needed to resolve multi-tenant connection strings:
-    /// <see cref="Settings"/>, an <see cref="IUniqueIdRetriever"/>, an
+    /// <see cref="Settings"/>, the supplied <see cref="IUniqueIdRetriever"/>, an
     /// <see cref="IConfigReader"/> for the chosen <paramref name="source"/>, and
     /// the <see cref="TenantResolver"/>. All are registered as singletons so the
     /// tenant cache is shared process-wide.
@@ -30,9 +45,15 @@ public static class ServiceCollectionExtensions
     public static IServiceCollection AddTownSuiteMultiTenant(
         this IServiceCollection services,
         IConfiguration configuration,
+        IUniqueIdRetriever uniqueIdRetriever,
         TenantConfigSource source = TenantConfigSource.Http,
         string settingsSectionName = "TenantSettings")
     {
+        if (uniqueIdRetriever is null)
+        {
+            throw new ArgumentNullException(nameof(uniqueIdRetriever));
+        }
+
         var settings = configuration.GetSection(settingsSectionName).Get<Settings>()
                        ?? throw new TownSuiteException(
                            $"Configuration section '{settingsSectionName}' is missing or could not be bound to Settings.");
@@ -44,7 +65,7 @@ public static class ServiceCollectionExtensions
         services.TryAddSingleton(configuration);
 
         services.AddSingleton(settings);
-        services.AddSingleton<IUniqueIdRetriever, SqlUniqueIdRetriever>();
+        services.AddSingleton(uniqueIdRetriever);
 
         switch (source)
         {

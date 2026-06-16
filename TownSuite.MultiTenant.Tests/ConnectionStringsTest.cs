@@ -17,10 +17,10 @@ public class ConnectionStringsTest
 
         Assert.That(con.ConnStr,
             Is.EqualTo(
-                "Data Source=myServerAddress;Initial Catalog=myDataBase;User ID=myUsername;Password=myPassword"));
+                "server=myServerAddress;database=myDataBase;user id=myUsername;password=myPassword"));
         Assert.That(con.Name, Is.EqualTo("app1"));
     }
-    
+
     [Test]
     public void OldSqlClientConnectionStringTest()
     {
@@ -46,10 +46,10 @@ public class ConnectionStringsTest
 
         Assert.That(con.ConnStr,
             Is.EqualTo(
-                "Data Source=myServerAddress;Initial Catalog=myDataBase;User ID=myUsername;Password=myPassword;TrustServerCertificate=True"));
+                "server=myServerAddress;database=myDataBase;user id=myUsername;password=myPassword;trustservercertificate=True"));
         Assert.That(con.Name, Is.EqualTo("app1"));
     }
-    
+
     [Test]
     public void NewSqlClientConnectionStringTest()
     {
@@ -75,7 +75,7 @@ public class ConnectionStringsTest
 
         Assert.That(con.ConnStr,
             Is.EqualTo(
-                "Data Source=myServerAddress;Initial Catalog=myDataBase;User ID=myUsername;Password=myPassword;Trust Server Certificate=True"));
+                "server=myServerAddress;database=myDataBase;user id=myUsername;password=myPassword;trust server certificate=True"));
         Assert.That(con.Name, Is.EqualTo("app1"));
     }
 
@@ -92,7 +92,7 @@ public class ConnectionStringsTest
 
         Assert.That(con.ConnStr,
             Is.EqualTo(
-                "Data Source=myServerAddress;Initial Catalog=myDataBase;User ID=myUsername;Password=myPassword"));
+                "server=myServerAddress;database=myDataBase;user id=myUsername;password=myPassword"));
         Assert.That(con.Name, Is.EqualTo("app1"));
     }
 

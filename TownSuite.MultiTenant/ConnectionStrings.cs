@@ -1,6 +1,6 @@
+using System.Data.Common;
 using System.Security.Cryptography;
 using System.Text;
-using Microsoft.Data.SqlClient;
 
 namespace TownSuite.MultiTenant;
 
@@ -90,7 +90,7 @@ public class ConnectionStrings
             }
         }
 
-        SqlConnectionStringBuilder csb;
+        DbConnectionStringBuilder csb;
 
         try
         {
@@ -101,7 +101,7 @@ public class ConnectionStrings
                     : Decrypt(raw);
             }
 
-            csb = new SqlConnectionStringBuilder(raw);
+            csb = new DbConnectionStringBuilder { ConnectionString = raw };
         }
         catch (Exception)
         {
@@ -112,7 +112,7 @@ public class ConnectionStrings
 
         try
         {
-            bool hasPass = csb.TryGetValue("password", out object encryptedPassword);
+            bool hasPass = csb.TryGetValue("password", out object? encryptedPassword);
             if (hasPass && IsBase64String(encryptedPassword?.ToString() ?? ""))
             {
                 csb["password"] = Decrypt(encryptedPassword?.ToString());
@@ -125,7 +125,7 @@ public class ConnectionStrings
 
         try
         {
-            bool hasUsername = csb.TryGetValue("User Id", out object encryptedUsername);
+            bool hasUsername = csb.TryGetValue("User Id", out object? encryptedUsername);
             if (hasUsername && IsBase64String(encryptedUsername?.ToString() ?? ""))
             {
                 csb["User Id"] = Decrypt(encryptedUsername?.ToString());

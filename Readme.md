@@ -26,21 +26,36 @@ Connection string tenant naming convention:
 Remove the {} and replace the tenant and connectionstring with the real values.
 
 
+## Database-agnostic
+
+The library never references a database provider. It resolves and caches
+connection strings; **you** supply how a tenant's canonical unique id is looked
+up, via a `UniqueIdLookup` delegate (or an `IUniqueIdRetriever`). A SQL Server
+reference implementation (`SqlUniqueIdRetriever`, using `Microsoft.Data.SqlClient`)
+lives in the Console project — copy it into your host, or write your own.
+
+`Tenant.GetConnectionString(appName)` returns the connection string for an app;
+constructing a `DbConnection` from it is the host's job (see the Console's
+`CreateConnection` extension for a SQL Server example).
+
 ## DI setup
 
 In `Program.cs`, register everything with the provided extension method. It binds
 `Settings` from the `TenantSettings` configuration section, wires up an
 `IHttpClientFactory`-backed `TsWebClient`, the chosen `IConfigReader`, and the
 `TenantResolver` — all as singletons so the tenant cache is shared process-wide.
+You pass the unique-id lookup.
 
 ```cs
 using TownSuite.MultiTenant;
 
-// Read tenant data over HTTP (default):
-builder.Services.AddTownSuiteMultiTenant(builder.Configuration);
+// Provide the lookup as a delegate (open the tenant connection, run a query, etc.):
+builder.Services.AddTownSuiteMultiTenant(builder.Configuration,
+    (con, configPairs, ct) => new SqlUniqueIdRetriever().GetUniqueId(con, configPairs, ct));
 
-// ...or read tenant data from the ConnectionStrings section of appsettings.json:
-builder.Services.AddTownSuiteMultiTenant(builder.Configuration, TenantConfigSource.AppSettings);
+// ...or pass an IUniqueIdRetriever instance, and/or read from appsettings.json:
+builder.Services.AddTownSuiteMultiTenant(builder.Configuration,
+    new SqlUniqueIdRetriever(), TenantConfigSource.AppSettings);
 ```
 
 If you prefer to wire the services up by hand instead of using the extension:
@@ -49,7 +64,7 @@ If you prefer to wire the services up by hand instead of using the extension:
 const string httpClientName = "TownSuite.MultiTenant.TsWebClient";
 services.AddSingleton(s =>
     s.GetRequiredService<IConfiguration>().GetSection("TenantSettings").Get<Settings>());
-services.AddSingleton<IUniqueIdRetriever, SqlUniqueIdRetriever>();
+services.AddSingleton<IUniqueIdRetriever>(new SqlUniqueIdRetriever()); // your implementation
 services.AddHttpClient(httpClientName);
 services.AddSingleton<TsWebClient>(s =>
 {

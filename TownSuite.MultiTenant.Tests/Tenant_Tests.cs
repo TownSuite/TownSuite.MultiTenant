@@ -107,23 +107,22 @@ public class Tenant_Tests
     }
 
     [Test]
-    public void CreateConnection_Throws_When_No_Match()
+    public void GetConnectionString_Throws_When_No_Match()
     {
         var t = new Tenant("abc");
         t.TryAddConnection("abc_WebService",
             "Server=myServerAddress;Database=myDataBase;User Id=u;Password=p;");
 
-        Assert.Throws<TownSuiteException>(() => t.CreateConnection("DoesNotExist"));
+        Assert.Throws<TownSuiteException>(() => t.GetConnectionString("DoesNotExist"));
     }
 
     [Test]
-    public void CreateConnection_Matches_Substring_CaseInsensitive()
+    public void GetConnectionString_Matches_Substring_CaseInsensitive()
     {
+        const string cs = "Server=myServerAddress;Database=myDataBase;User Id=u;Password=p;";
         var t = new Tenant("abc");
-        t.TryAddConnection("abc_WebService",
-            "Server=myServerAddress;Database=myDataBase;User Id=u;Password=p;");
+        t.TryAddConnection("abc_WebService", cs);
 
-        using var conn = t.CreateConnection("webservice");
-        Assert.That(conn, Is.Not.Null);
+        Assert.That(t.GetConnectionString("webservice"), Is.EqualTo(cs));
     }
 }
