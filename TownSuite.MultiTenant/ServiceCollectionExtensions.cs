@@ -49,15 +49,12 @@ public static class ServiceCollectionExtensions
         switch (source)
         {
             case TenantConfigSource.Http:
-                // Use IHttpClientFactory so the underlying handler pool is managed
-                // (DNS refresh, no socket exhaustion) rather than holding a raw
-                // `new HttpClient()`.
+                // Pass the factory (not a captured HttpClient) so TsWebClient
+                // resolves a fresh client per request and the handler pool is
+                // managed (DNS refresh, no socket exhaustion).
                 services.AddHttpClient(TsWebClientName);
                 services.AddSingleton<TsWebClient>(sp =>
-                {
-                    var httpClient = sp.GetRequiredService<IHttpClientFactory>().CreateClient(TsWebClientName);
-                    return new TsWebClient(httpClient, settings.UserAgent);
-                });
+                    new TsWebClient(sp.GetRequiredService<IHttpClientFactory>(), TsWebClientName, settings.UserAgent));
                 services.AddSingleton<IConfigReader, HttpConfigReader>();
                 break;
 

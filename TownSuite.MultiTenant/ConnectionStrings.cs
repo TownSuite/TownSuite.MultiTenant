@@ -41,9 +41,14 @@ public class ConnectionStrings
     /// </summary>
     public string AppType => Name?.Split('_').LastOrDefault();
 
-    public void ChangeConnStr(string connStr)
+    /// <summary>
+    /// Replaces the stored connection string with an already-decrypted value.
+    /// Unlike the <see cref="ConnStr"/> initializer, this does NOT run
+    /// decryption — pass a plaintext/decrypted connection string only.
+    /// </summary>
+    public void SetDecryptedConnStr(string decryptedConnStr)
     {
-        _connStr = connStr;
+        _connStr = decryptedConnStr;
     }
 
     private string DeCryptConnectionString(string cnStr)

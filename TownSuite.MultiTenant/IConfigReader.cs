@@ -30,5 +30,12 @@ public interface IConfigReader
 
     bool IsSetup();
 
+    /// <summary>
+    /// Number of tenant load/initialization errors from the most recent load.
+    /// A non-zero value alongside an otherwise empty/partial cache indicates the
+    /// last load failed rather than there being no tenants configured.
+    /// </summary>
+    int LastLoadErrorCount { get; }
+
     void Clear();
 }

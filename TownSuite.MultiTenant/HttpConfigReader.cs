@@ -5,25 +5,21 @@ namespace TownSuite.MultiTenant;
 
 public class HttpConfigReader : ConfigReader
 {
-    private readonly ILogger<HttpConfigReader> _logger;
-
     private readonly TsWebClient _webClient;
 
     public HttpConfigReader(ILogger<HttpConfigReader> logger, IUniqueIdRetriever uniqueIdRetriever,
         TsWebClient webClient,
-        Settings settings) : base(uniqueIdRetriever, settings)
+        Settings settings) : base(uniqueIdRetriever, settings, logger)
     {
-        _logger = logger;
         _webClient = webClient;
     }
 
     /// <summary>
     /// Loads tenant data from the configured HTTP endpoints.
     /// </summary>
-    protected override async Task LoadConnectionsAsync(CancellationToken cancellationToken)
+    protected override async Task LoadConnectionsAsync(
+        ConcurrentDictionary<string, IList<ConnectionStrings>> target, CancellationToken cancellationToken)
     {
-        _connections = new ConcurrentDictionary<string, IList<ConnectionStrings>>();
-
         foreach (var configPair in _settings.ConfigPairs)
         {
             foreach (var configReaderUrl in configPair.ConfigReaderUrls)
@@ -43,7 +39,7 @@ public class HttpConfigReader : ConfigReader
                         var con = new ConnectionStrings(configPair.DecryptionKey)
                             { Name = $"{connection.Key}", ConnStr = connection.Value };
                         conns.Add(con);
-                        tasks.Add(InitializeUniqueIds(con, pattern, configPair, cancellationToken));
+                        tasks.Add(InitializeUniqueIds(target, con, pattern, configPair, cancellationToken));
                     }
                 }
 
@@ -51,16 +47,8 @@ public class HttpConfigReader : ConfigReader
 
                 LogAndDrainExceptions();
 
-                GroupDatabasesByTenant(conns);
+                GroupDatabasesByTenant(target, conns);
             }
-        }
-    }
-
-    private void LogAndDrainExceptions()
-    {
-        while (Exceptions.TryTake(out var ex))
-        {
-            _logger.LogError(ex, "Tenant configuration load error: {ErrorMessage}", ex.Message);
         }
     }
 }

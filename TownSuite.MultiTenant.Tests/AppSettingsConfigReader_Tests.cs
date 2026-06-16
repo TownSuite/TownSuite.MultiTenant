@@ -110,4 +110,48 @@ public class AppSettingsConfigReader_Tests
         var connString = reader.GetConnection("tenant3", "app1");
         Assert.That(connString, Is.EqualTo("PLACEHOLDER5"));
     }
+
+    [Test]
+    public async Task GetConnections_ReturnsCopy_CannotMutateCache()
+    {
+        var logger = Mock.Of<ILogger<AppSettingsConfigReader>>();
+        var reader = new AppSettingsConfigReader(config, logger, new IdFaker(), settings);
+        await reader.Refresh();
+
+        var first = reader.GetConnections("tenant1");
+        var originalCount = first.Count;
+        first.Clear();
+
+        var second = reader.GetConnections("tenant1");
+        Assert.That(second.Count, Is.EqualTo(originalCount));
+    }
+
+    [Test]
+    public async Task LastLoadErrorCount_IsZero_OnCleanLoad()
+    {
+        var logger = Mock.Of<ILogger<AppSettingsConfigReader>>();
+        var reader = new AppSettingsConfigReader(config, logger, new IdFaker(), settings);
+        await reader.Refresh();
+
+        // Pattern non-matches (e.g. tenant1_app2) are expected flow, not errors.
+        Assert.That(reader.LastLoadErrorCount, Is.EqualTo(0));
+    }
+
+    [Test]
+    public async Task LastLoadErrorCount_CountsEmptyUniqueId()
+    {
+        var logger = Mock.Of<ILogger<AppSettingsConfigReader>>();
+        // EmptyIdFaker resolves every matching connection to an empty unique id.
+        var reader = new AppSettingsConfigReader(config, logger, new EmptyIdFaker(), settings);
+        await reader.Refresh();
+
+        Assert.That(reader.LastLoadErrorCount, Is.GreaterThan(0));
+        Assert.That(reader.IsSetup(), Is.False);
+    }
+
+    private sealed class EmptyIdFaker : IUniqueIdRetriever
+    {
+        public Task<string> GetUniqueId(ConnectionStrings con, AppSettingsConfigPairs configPairs,
+            CancellationToken cancellationToken = default) => Task.FromResult("");
+    }
 }

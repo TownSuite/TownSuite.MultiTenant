@@ -1,5 +1,6 @@
 using System.Collections.Concurrent;
 using System.Text.RegularExpressions;
+using Microsoft.Extensions.Logging;
 
 namespace TownSuite.MultiTenant;
 
@@ -18,18 +19,28 @@ public abstract class ConfigReader : IConfigReader
 
     private static readonly ConcurrentDictionary<string, Regex> _patternCache = new();
 
-    protected ConcurrentDictionary<string, IList<ConnectionStrings>> _connections = new();
+    private volatile ConcurrentDictionary<string, IList<ConnectionStrings>> _connections = new();
     private readonly IUniqueIdRetriever _uniqueIdRetriever;
+    private readonly ILogger _logger;
     protected readonly Settings _settings;
     private readonly SemaphoreSlim _refreshLock = new(1, 1);
     private readonly SemaphoreSlim _lookupThrottle = new(MaxConcurrentUniqueIdLookups);
 
-    protected ConcurrentBag<Exception> Exceptions { get; } = new();
+    private readonly ConcurrentBag<Exception> _exceptions = new();
+    private int _lastLoadErrorCount;
 
-    protected ConfigReader(IUniqueIdRetriever uniqueIdRetriever, Settings settings)
+    /// <summary>
+    /// Number of tenant load/initialization errors encountered during the most
+    /// recent load. Lets callers/health checks distinguish a clean load from a
+    /// partial or total failure that left the cache empty.
+    /// </summary>
+    public int LastLoadErrorCount => _lastLoadErrorCount;
+
+    protected ConfigReader(IUniqueIdRetriever uniqueIdRetriever, Settings settings, ILogger logger)
     {
         _uniqueIdRetriever = uniqueIdRetriever ?? throw new ArgumentNullException(nameof(uniqueIdRetriever));
         _settings = settings ?? throw new ArgumentNullException(nameof(settings));
+        _logger = logger ?? throw new ArgumentNullException(nameof(logger));
 
         if (settings.ConfigPairs == null || settings.ConfigPairs.Length == 0)
         {
@@ -40,8 +51,9 @@ public abstract class ConfigReader : IConfigReader
 
     public IList<ConnectionStrings> GetConnections(string tenant)
     {
+        // Return a copy so callers cannot mutate the cached list.
         return _connections.TryGetValue(tenant, out var conns)
-            ? conns
+            ? new List<ConnectionStrings>(conns)
             : new List<ConnectionStrings>();
     }
 
@@ -60,13 +72,15 @@ public abstract class ConfigReader : IConfigReader
     /// <summary>
     /// Force a full reload of tenant connection data. Concurrent callers are
     /// serialized so a burst of requests results in a single reload at a time.
+    /// The freshly built data is swapped in atomically, so readers never observe
+    /// a partially populated cache.
     /// </summary>
     public async Task Refresh(CancellationToken cancellationToken = default)
     {
         await _refreshLock.WaitAsync(cancellationToken).ConfigureAwait(false);
         try
         {
-            await LoadConnectionsAsync(cancellationToken).ConfigureAwait(false);
+            await LoadAndSwapAsync(cancellationToken).ConfigureAwait(false);
         }
         finally
         {
@@ -93,7 +107,7 @@ public abstract class ConfigReader : IConfigReader
                 return;
             }
 
-            await LoadConnectionsAsync(cancellationToken).ConfigureAwait(false);
+            await LoadAndSwapAsync(cancellationToken).ConfigureAwait(false);
         }
         finally
         {
@@ -101,11 +115,26 @@ public abstract class ConfigReader : IConfigReader
         }
     }
 
+    private async Task LoadAndSwapAsync(CancellationToken cancellationToken)
+    {
+        // Build into a private dictionary and publish it in one assignment so
+        // concurrent readers always see either the previous or the new data set,
+        // never a half-built one.
+        var target = new ConcurrentDictionary<string, IList<ConnectionStrings>>();
+        Interlocked.Exchange(ref _lastLoadErrorCount, 0);
+
+        await LoadConnectionsAsync(target, cancellationToken).ConfigureAwait(false);
+
+        _connections = target;
+    }
+
     /// <summary>
     /// Implementation-specific load of all tenant connection strings into
-    /// <see cref="_connections"/>. Always invoked under the refresh lock.
+    /// <paramref name="target"/>. Always invoked under the refresh lock; the base
+    /// class publishes <paramref name="target"/> atomically once this completes.
     /// </summary>
-    protected abstract Task LoadConnectionsAsync(CancellationToken cancellationToken);
+    protected abstract Task LoadConnectionsAsync(
+        ConcurrentDictionary<string, IList<ConnectionStrings>> target, CancellationToken cancellationToken);
 
     /// <summary>
     /// Clear the cache without reloading.
@@ -120,7 +149,8 @@ public abstract class ConfigReader : IConfigReader
         return !_connections.IsEmpty;
     }
 
-    protected async Task InitializeUniqueIds(ConnectionStrings con, string pattern, AppSettingsConfigPairs configPairs,
+    protected async Task InitializeUniqueIds(ConcurrentDictionary<string, IList<ConnectionStrings>> target,
+        ConnectionStrings con, string pattern, AppSettingsConfigPairs configPairs,
         CancellationToken cancellationToken = default)
     {
         if (string.IsNullOrWhiteSpace(con.TenantOrAlias))
@@ -130,7 +160,11 @@ public abstract class ConfigReader : IConfigReader
 
         if (!GetRegex(pattern).IsMatch(con.Name))
         {
-            Exceptions.Add(new TownSuiteException($"{con.Name} did not match pattern {pattern}"));
+            // Not matching the unique-id pattern is expected: these connections
+            // (e.g. a tenant's secondary apps) are attached later by alias in
+            // GroupDatabasesByTenant. This is normal flow, not a load error.
+            _logger.LogDebug("{ConnectionName} did not match unique-id pattern {Pattern}; will group by alias.",
+                con.Name, pattern);
             return;
         }
 
@@ -148,11 +182,18 @@ public abstract class ConfigReader : IConfigReader
                 _lookupThrottle.Release();
             }
 
-            AddOrUpdateCons(con, uniqueId);
+            if (string.IsNullOrWhiteSpace(uniqueId))
+            {
+                _exceptions.Add(new TownSuiteException(
+                    $"Tenant {con.Name} resolved to an empty unique id. Check the SqlUniqueIdLookup query."));
+                return;
+            }
+
+            AddOrUpdateCons(target, con, uniqueId);
         }
         catch (Exception ex)
         {
-            Exceptions.Add(new TownSuiteException($"Failed to resolve and initialize tenant {con.Name}.", ex));
+            _exceptions.Add(new TownSuiteException($"Failed to resolve and initialize tenant {con.Name}.", ex));
         }
     }
 
@@ -162,9 +203,10 @@ public abstract class ConfigReader : IConfigReader
             p => new Regex(p, RegexOptions.IgnoreCase | RegexOptions.Compiled));
     }
 
-    private void AddOrUpdateCons(ConnectionStrings con, string uniqueId)
+    private static void AddOrUpdateCons(ConcurrentDictionary<string, IList<ConnectionStrings>> target,
+        ConnectionStrings con, string uniqueId)
     {
-        _connections.AddOrUpdate(uniqueId,
+        target.AddOrUpdate(uniqueId,
             addValueFactory: (key) => new List<ConnectionStrings>() { con },
             updateValueFactory: (k, existinglist) =>
             {
@@ -177,14 +219,15 @@ public abstract class ConfigReader : IConfigReader
                 }
                 else
                 {
-                    existing.ChangeConnStr(con.ConnStr);
+                    existing.SetDecryptedConnStr(con.ConnStr);
                 }
 
                 return existinglist;
             });
     }
 
-    protected void GroupDatabasesByTenant(List<ConnectionStrings> conns)
+    protected void GroupDatabasesByTenant(ConcurrentDictionary<string, IList<ConnectionStrings>> target,
+        List<ConnectionStrings> conns)
     {
         // Find all connection strings that follow the {tenant/alias}_{name/dbType}
         // pattern and attach them to every tenant that already owns a connection
@@ -196,7 +239,7 @@ public abstract class ConfigReader : IConfigReader
         // connection is only ever added to a tenant whose alias it already
         // matches), so the prebuilt index stays correct.
         var aliasIndex = new Dictionary<string, List<string>>(StringComparer.InvariantCultureIgnoreCase);
-        foreach (var entry in _connections)
+        foreach (var entry in target)
         {
             foreach (var existing in entry.Value)
             {
@@ -226,14 +269,28 @@ public abstract class ConfigReader : IConfigReader
             {
                 foreach (var tenantKey in tenantKeys)
                 {
-                    AddOrUpdateCons(con, tenantKey);
+                    AddOrUpdateCons(target, con, tenantKey);
                 }
             }
         }
     }
 
+    /// <summary>
+    /// Logs and clears any errors accumulated during the current load, tracking
+    /// the count in <see cref="LastLoadErrorCount"/>. Implementations should call
+    /// this after each batch of <see cref="InitializeUniqueIds"/> work.
+    /// </summary>
+    protected void LogAndDrainExceptions()
+    {
+        while (_exceptions.TryTake(out var ex))
+        {
+            Interlocked.Increment(ref _lastLoadErrorCount);
+            _logger.LogError(ex, "Tenant configuration load error: {ErrorMessage}", ex.Message);
+        }
+    }
+
     public IList<string> GetTenantIds()
     {
-        return _connections.Keys.Distinct().ToList();
+        return _connections.Keys.ToList();
     }
 }

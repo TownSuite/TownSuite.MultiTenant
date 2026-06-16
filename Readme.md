@@ -46,15 +46,16 @@ builder.Services.AddTownSuiteMultiTenant(builder.Configuration, TenantConfigSour
 If you prefer to wire the services up by hand instead of using the extension:
 
 ```cs
+const string httpClientName = "TownSuite.MultiTenant.TsWebClient";
 services.AddSingleton(s =>
     s.GetRequiredService<IConfiguration>().GetSection("TenantSettings").Get<Settings>());
 services.AddSingleton<IUniqueIdRetriever, SqlUniqueIdRetriever>();
-services.AddHttpClient(nameof(TsWebClient));
+services.AddHttpClient(httpClientName);
 services.AddSingleton<TsWebClient>(s =>
 {
     var config = s.GetRequiredService<Settings>();
-    var httpClient = s.GetRequiredService<IHttpClientFactory>().CreateClient(nameof(TsWebClient));
-    return new TsWebClient(httpClient, userAgent: config.UserAgent);
+    var factory = s.GetRequiredService<IHttpClientFactory>();
+    return new TsWebClient(factory, httpClientName, userAgent: config.UserAgent);
 });
 services.AddSingleton<IConfigReader, HttpConfigReader>();
 services.AddSingleton<TenantResolver>();

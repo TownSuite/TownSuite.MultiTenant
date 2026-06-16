@@ -8,11 +8,29 @@ namespace TownSuite.MultiTenant;
 public class TsWebClient
 {
     private readonly HttpClient _httpClient;
+    private readonly IHttpClientFactory _httpClientFactory;
+    private readonly string _clientName;
     private readonly string _userAgent;
 
+    /// <summary>
+    /// Creates a client backed by a caller-supplied <see cref="HttpClient"/>.
+    /// Useful for tests, or when you manage the client's lifetime yourself.
+    /// </summary>
     public TsWebClient(HttpClient httpClient, string userAgent)
     {
         _httpClient = httpClient;
+        _userAgent = userAgent;
+    }
+
+    /// <summary>
+    /// Preferred constructor: resolves a fresh <see cref="HttpClient"/> from the
+    /// factory on each request so the underlying handler pool is managed
+    /// (DNS refresh, no socket exhaustion) even though this object is a singleton.
+    /// </summary>
+    public TsWebClient(IHttpClientFactory httpClientFactory, string clientName, string userAgent)
+    {
+        _httpClientFactory = httpClientFactory;
+        _clientName = clientName;
         _userAgent = userAgent;
     }
 
@@ -24,13 +42,15 @@ public class TsWebClient
             throw new TownSuiteException("User-Agent is required.");
         }
 
+        var client = _httpClientFactory?.CreateClient(_clientName) ?? _httpClient;
+
         using var request = new HttpRequestMessage(HttpMethod.Get,
             new Uri(url, UriKind.RelativeOrAbsolute));
         request.Headers.Accept.Add(MediaTypeWithQualityHeaderValue.Parse("application/json"));
         request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", bearerToken);
         request.Headers.Add("User-Agent", _userAgent);
 
-        using var response = await _httpClient
+        using var response = await client
             .SendAsync(request, HttpCompletionOption.ResponseHeadersRead, cancellationToken)
             .ConfigureAwait(false);
 

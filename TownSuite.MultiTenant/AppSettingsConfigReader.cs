@@ -7,23 +7,21 @@ namespace TownSuite.MultiTenant;
 public class AppSettingsConfigReader : ConfigReader
 {
     private readonly IConfiguration _configuration;
-    private readonly ILogger<AppSettingsConfigReader> _logger;
 
     public AppSettingsConfigReader(IConfiguration configuration,
         ILogger<AppSettingsConfigReader> logger, IUniqueIdRetriever uniqueIdRetriever,
-        Settings settings) : base(uniqueIdRetriever, settings)
+        Settings settings) : base(uniqueIdRetriever, settings, logger)
     {
         _configuration = configuration;
-        _logger = logger;
     }
 
     /// <summary>
     /// Loads tenant data from the ConnectionStrings section of configuration.
     /// </summary>
-    protected override async Task LoadConnectionsAsync(CancellationToken cancellationToken)
+    protected override async Task LoadConnectionsAsync(
+        ConcurrentDictionary<string, IList<ConnectionStrings>> target, CancellationToken cancellationToken)
     {
         var connections = _configuration.GetSection("ConnectionStrings").GetChildren();
-        _connections = new ConcurrentDictionary<string, IList<ConnectionStrings>>();
         var conns = new List<ConnectionStrings>();
 
         var firstSettingsRecord = _settings.ConfigPairs.FirstOrDefault();
@@ -36,21 +34,13 @@ public class AppSettingsConfigReader : ConfigReader
             var con = new ConnectionStrings(firstSettingsRecord.DecryptionKey)
                 { Name = connection.Key, ConnStr = connection.Value };
             conns.Add(con);
-            tasks.Add(InitializeUniqueIds(con, pattern, firstSettingsRecord, cancellationToken));
+            tasks.Add(InitializeUniqueIds(target, con, pattern, firstSettingsRecord, cancellationToken));
         }
 
         await Task.WhenAll(tasks).ConfigureAwait(false);
 
         LogAndDrainExceptions();
 
-        GroupDatabasesByTenant(conns);
-    }
-
-    private void LogAndDrainExceptions()
-    {
-        while (Exceptions.TryTake(out var ex))
-        {
-            _logger.LogError(ex, "Tenant configuration load error: {ErrorMessage}", ex.Message);
-        }
+        GroupDatabasesByTenant(target, conns);
     }
 }
