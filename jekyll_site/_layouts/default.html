@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="{{ page.lang | default: site.lang | default: 'en' }}">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>{{ page.title | default: site.title }}</title>
+<meta name="description" content="{{ page.description | default: site.description }}">
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=IBM+Plex+Sans:wght@400;500;600&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+
+<style>
+  :root{
+    --brand:#00578E; --brand-2:#6B95BE; --brand-3:#D8E0ED;
+    --gold:#E48D1A; --green:#2DA343; --red:#E03A3E;
+    --ink:#0f2233; --ink-2:#41566a; --muted:#728498; --line:#e4ebf3;
+    --paper:#ffffff; --paper-2:#f4f7fb; --code:#0b1a2a;
+    --accent:#00578E;
+  }
+  *{box-sizing:border-box}
+  html{scroll-behavior:smooth}
+  body{margin:0;background:var(--paper);color:var(--ink);font-family:'IBM Plex Sans',system-ui,sans-serif;-webkit-font-smoothing:antialiased}
+  ::selection{background:var(--brand);color:#fff}
+  a{color:inherit}
+  @keyframes flowdot{0%{top:-6px;opacity:0}12%{opacity:1}88%{opacity:1}100%{top:100%;opacity:0}}
+  @keyframes spin{to{transform:rotate(360deg)}}
+  ::-webkit-scrollbar{height:10px;width:10px}
+  ::-webkit-scrollbar-thumb{background:#cdd9e6;border-radius:8px}
+  pre::-webkit-scrollbar-thumb{background:#1d3a56}
+  @media (max-width:980px){
+    [data-sidebar]{position:static!important;width:auto!important;height:auto!important;border-right:none!important;border-bottom:1px solid var(--line)!important}
+    [data-main]{margin-left:0!important}
+    [data-hero]{grid-template-columns:1fr!important}
+    [data-diagram]{display:none!important}
+    [data-feat]{grid-template-columns:1fr!important}
+    [data-alts]{grid-template-columns:1fr!important}
+    [data-navwrap]{max-height:none!important;overflow:visible!important}
+  }
+</style>
+</head>
+<body>
+{{ content }}
+<script src="assets/js/docs.js"></script>
+</body>
+</html>

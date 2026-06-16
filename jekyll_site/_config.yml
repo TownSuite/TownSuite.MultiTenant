@@ -1,0 +1,21 @@
+title: TownSuite.MultiTenant — Docs
+description: >-
+  One instance. Many tenant databases. A bare-bones NuGet package that lets a
+  single application instance serve many tenants — each with isolated data — by
+  resolving tenant-specific connection strings on the fly.
+lang: en
+
+# GitHub Pages deploys this project site under /<repo-name>/.
+# Assets in index.html use page-relative paths, so the site works regardless of
+# baseurl; this value only affects the `relative_url`/`absolute_url` filters.
+baseurl: "/TownSuite.MultiTenant"
+
+# Plain static site — no theme, no plugins needed.
+theme: null
+plugins: []
+
+exclude:
+  - Gemfile
+  - Gemfile.lock
+  - vendor
+  - README.md

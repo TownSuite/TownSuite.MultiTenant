@@ -1,0 +1,475 @@
+---
+layout: default
+---
+<div id="tsmt-root" style="min-height:100vh;background:var(--paper)">
+
+  <!-- SIDEBAR -->
+  <aside data-sidebar style="position:fixed;top:0;left:0;width:268px;height:100vh;background:var(--paper-2);border-right:1px solid var(--line);display:flex;flex-direction:column;z-index:20">
+    <div style="display:flex;align-items:center;gap:12px;padding:22px 22px 18px">
+      <svg viewBox="0 0 95 95" width="34" height="34" xmlns="http://www.w3.org/2000/svg" style="flex:none">
+        <rect x="34.8" y="36" transform="matrix(0.4241 0.9056 -0.9056 0.4241 71.3904 -14.9512)" fill="#00578E" width="25.2" height="25.2"></rect>
+        <rect x="22.2" y="6.6" transform="matrix(0.4241 0.9056 -0.9056 0.4241 37.4551 -20.5025)" fill="#D8E0ED" width="25.2" height="25.2"></rect>
+        <rect x="5" y="50.8" transform="matrix(0.4241 0.9056 -0.9056 0.4241 67.5745 20.6203)" fill="#6B95BE" width="25.2" height="25.2"></rect>
+        <rect x="69.6" y="66.4" transform="matrix(-0.4559 -0.89 0.89 -0.4559 45.963 174.1142)" fill="#E48D1A" width="13.1" height="13.1"></rect>
+        <rect x="86.4" y="59.7" transform="matrix(-0.4258 -0.9048 0.9048 -0.4258 70.867 171.2279)" fill="#2DA343" width="6.8" height="6.8"></rect>
+        <rect x="77.1" y="85.3" transform="matrix(-0.4254 -0.905 0.905 -0.4254 34.5684 199.4388)" fill="#E03A3E" width="6.9" height="6.9"></rect>
+      </svg>
+      <div style="line-height:1.05">
+        <div style="font:600 10px/1 'JetBrains Mono',monospace;letter-spacing:.22em;color:var(--muted);text-transform:uppercase">TownSuite</div>
+        <div style="font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:19px;color:var(--ink);margin-top:3px">MultiTenant</div>
+      </div>
+    </div>
+
+    <div data-navwrap style="flex:1;overflow-y:auto;padding:6px 14px 14px">
+      <div style="font:600 10px/1 'JetBrains Mono',monospace;letter-spacing:.18em;color:var(--muted);text-transform:uppercase;padding:14px 10px 7px">Get started</div>
+      <a data-link href="#overview" style="display:block;text-decoration:none;color:var(--ink-2);font-size:14px;font-weight:500;padding:8px 11px;border-radius:8px">Overview</a>
+      <a data-link href="#features" style="display:block;text-decoration:none;color:var(--ink-2);font-size:14px;font-weight:500;padding:8px 11px;border-radius:8px">Key features</a>
+      <a data-link href="#how" style="display:block;text-decoration:none;color:var(--ink-2);font-size:14px;font-weight:500;padding:8px 11px;border-radius:8px">How it works</a>
+      <a data-link href="#install" style="display:block;text-decoration:none;color:var(--ink-2);font-size:14px;font-weight:500;padding:8px 11px;border-radius:8px">Installation</a>
+
+      <div style="font:600 10px/1 'JetBrains Mono',monospace;letter-spacing:.18em;color:var(--muted);text-transform:uppercase;padding:16px 10px 7px">Integrate</div>
+      <a data-link href="#di" style="display:block;text-decoration:none;color:var(--ink-2);font-size:14px;font-weight:500;padding:8px 11px;border-radius:8px">Service registration</a>
+      <a data-link href="#config" style="display:block;text-decoration:none;color:var(--ink-2);font-size:14px;font-weight:500;padding:8px 11px;border-radius:8px">Configuration</a>
+      <a data-link href="#examples" style="display:block;text-decoration:none;color:var(--ink-2);font-size:14px;font-weight:500;padding:8px 11px;border-radius:8px">Usage examples</a>
+
+      <div style="font:600 10px/1 'JetBrains Mono',monospace;letter-spacing:.18em;color:var(--muted);text-transform:uppercase;padding:16px 10px 7px">Reference</div>
+      <a data-link href="#formats" style="display:block;text-decoration:none;color:var(--ink-2);font-size:14px;font-weight:500;padding:8px 11px;border-radius:8px">Data formats</a>
+      <a data-link href="#alternatives" style="display:block;text-decoration:none;color:var(--ink-2);font-size:14px;font-weight:500;padding:8px 11px;border-radius:8px">Alternatives</a>
+    </div>
+
+    <a href="https://github.com/TownSuite/TownSuite.MultiTenant" target="_blank" rel="noopener" style="display:flex;align-items:center;gap:9px;text-decoration:none;margin:0 14px 16px;padding:11px 13px;border:1px solid var(--line);border-radius:10px;background:var(--paper);color:var(--ink);font-size:13px;font-weight:600">
+      <svg width="17" height="17" viewBox="0 0 16 16" fill="currentColor" style="flex:none"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.01 8.01 0 0016 8c0-4.42-3.58-8-8-8z"></path></svg>
+      View source
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" style="margin-left:auto;opacity:.5"><path d="M7 17L17 7M9 7h8v8"></path></svg>
+    </a>
+  </aside>
+
+  <!-- MAIN -->
+  <main data-main style="margin-left:268px">
+
+    <!-- HERO -->
+    <section id="overview" style="position:relative;overflow:hidden;background:linear-gradient(180deg,#f4f7fb 0%,#ffffff 100%);border-bottom:1px solid var(--line)">
+      <svg viewBox="0 0 95 95" width="460" height="460" xmlns="http://www.w3.org/2000/svg" style="position:absolute;top:-120px;right:-110px;opacity:.07;pointer-events:none">
+        <rect x="34.8" y="36" transform="matrix(0.4241 0.9056 -0.9056 0.4241 71.3904 -14.9512)" fill="#00578E" width="25.2" height="25.2"></rect>
+        <rect x="22.2" y="6.6" transform="matrix(0.4241 0.9056 -0.9056 0.4241 37.4551 -20.5025)" fill="#00578E" width="25.2" height="25.2"></rect>
+        <rect x="5" y="50.8" transform="matrix(0.4241 0.9056 -0.9056 0.4241 67.5745 20.6203)" fill="#00578E" width="25.2" height="25.2"></rect>
+      </svg>
+      <div data-hero style="position:relative;max-width:1080px;margin:0 auto;padding:64px 40px 60px;display:grid;grid-template-columns:1.05fr .95fr;gap:52px;align-items:center">
+        <div>
+          <div style="display:inline-flex;align-items:center;gap:10px;font:600 11px/1 'JetBrains Mono',monospace;letter-spacing:.14em;text-transform:uppercase;color:var(--brand);background:#fff;border:1px solid var(--brand-3);padding:7px 12px;border-radius:999px">
+            <span style="display:inline-flex;gap:4px">
+              <span style="width:7px;height:7px;background:var(--gold)"></span>
+              <span style="width:7px;height:7px;background:var(--green)"></span>
+              <span style="width:7px;height:7px;background:var(--red)"></span>
+            </span>
+            NuGet · .NET · Multi-tenancy
+          </div>
+          <h1 style="font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:48px;line-height:1.04;letter-spacing:-.02em;color:var(--ink);margin:20px 0 0">One instance.<br>Many tenant databases.</h1>
+          <p style="font-size:17px;line-height:1.65;color:var(--ink-2);max-width:30em;margin:18px 0 0">A bare-bones NuGet package that lets a single application instance serve many tenants — each with isolated data — by resolving tenant-specific connection strings on the fly.</p>
+          <div style="display:flex;flex-wrap:wrap;gap:12px;margin-top:28px">
+            <a href="https://github.com/TownSuite/TownSuite.MultiTenant" target="_blank" rel="noopener" style="display:inline-flex;align-items:center;gap:8px;text-decoration:none;background:var(--brand);color:#fff;font-weight:600;font-size:14px;padding:13px 20px;border-radius:10px;box-shadow:0 10px 24px -12px rgba(0,87,142,.7)">
+              <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.01 8.01 0 0016 8c0-4.42-3.58-8-8-8z"></path></svg>
+              View on GitHub
+            </a>
+            <a href="#install" data-link style="display:inline-flex;align-items:center;gap:8px;text-decoration:none;background:#fff;color:var(--ink);font-weight:600;font-size:14px;padding:13px 20px;border-radius:10px;border:1px solid var(--line)">Install package</a>
+          </div>
+          <div style="display:flex;flex-wrap:wrap;gap:22px;margin-top:30px">
+            <div><div style="font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:22px;color:var(--brand)">2 readers</div><div style="font:500 12px/1.4 'JetBrains Mono',monospace;color:var(--muted)">appsettings · HTTP</div></div>
+            <div style="width:1px;background:var(--line)"></div>
+            <div><div style="font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:22px;color:var(--brand)">1 line</div><div style="font:500 12px/1.4 'JetBrains Mono',monospace;color:var(--muted)">to resolve a tenant</div></div>
+            <div style="width:1px;background:var(--line)"></div>
+            <div><div style="font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:22px;color:var(--brand)">MIT</div><div style="font:500 12px/1.4 'JetBrains Mono',monospace;color:var(--muted)">open source</div></div>
+          </div>
+        </div>
+
+        <!-- DIAGRAM -->
+        <div data-diagram style="background:#fff;border:1px solid var(--line);border-radius:18px;padding:26px 24px;box-shadow:0 30px 60px -34px rgba(15,34,51,.32)">
+          <div style="font:600 10px/1 'JetBrains Mono',monospace;letter-spacing:.16em;text-transform:uppercase;color:var(--muted);margin-bottom:16px">Tenant resolution</div>
+
+          <div style="display:flex;align-items:center;gap:10px;background:var(--paper-2);border:1px solid var(--line);border-radius:10px;padding:11px 13px">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--brand)" stroke-width="2"><path d="M4 12h16M14 6l6 6-6 6"></path></svg>
+            <span style="font:500 12.5px/1 'JetBrains Mono',monospace;color:var(--ink)">GET /example?tenantId=<span style="color:var(--brand);font-weight:600">tenant1</span></span>
+          </div>
+
+          <div style="position:relative;height:34px;margin:2px auto;width:2px;background:var(--brand-3)">
+            <span style="position:absolute;left:-3px;width:8px;height:8px;border-radius:50%;background:var(--gold);box-shadow:0 0 0 4px rgba(228,141,26,.18);animation:flowdot 2.6s linear infinite"></span>
+          </div>
+
+          <div style="display:flex;align-items:center;gap:12px;border:1.5px solid var(--brand);background:#f3f8fc;border-radius:12px;padding:13px 15px">
+            <div style="flex:none;width:34px;height:34px;border-radius:9px;background:var(--brand);display:flex;align-items:center;justify-content:center">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2"><path d="M10 13a5 5 0 0 0 7 0l3-3a5 5 0 0 0-7-7l-1 1"></path><path d="M14 11a5 5 0 0 0-7 0l-3 3a5 5 0 0 0 7 7l1-1"></path></svg>
+            </div>
+            <div>
+              <div style="font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:15px;color:var(--ink)">TenantResolver</div>
+              <div style="font:500 11px/1.4 'JetBrains Mono',monospace;color:var(--muted)">.Resolve("tenant1")</div>
+            </div>
+          </div>
+
+          <div style="position:relative;height:34px;margin:2px auto;width:2px;background:var(--brand-3)">
+            <span style="position:absolute;left:-3px;width:8px;height:8px;border-radius:50%;background:var(--green);box-shadow:0 0 0 4px rgba(45,163,67,.18);animation:flowdot 2.6s linear .6s infinite"></span>
+          </div>
+
+          <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:9px">
+            <div style="border:1.5px solid var(--brand);background:#f3f8fc;border-radius:10px;padding:11px 9px;text-align:center">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--brand)" stroke-width="1.8" style="margin:0 auto"><ellipse cx="12" cy="5" rx="8" ry="3"></ellipse><path d="M4 5v14c0 1.66 3.58 3 8 3s8-1.34 8-3V5"></path><path d="M4 12c0 1.66 3.58 3 8 3s8-1.34 8-3"></path></svg>
+              <div style="font:600 10.5px/1.3 'JetBrains Mono',monospace;color:var(--brand);margin-top:6px">tenant1</div>
+            </div>
+            <div style="border:1px solid var(--line);border-radius:10px;padding:11px 9px;text-align:center;opacity:.55">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--muted)" stroke-width="1.8" style="margin:0 auto"><ellipse cx="12" cy="5" rx="8" ry="3"></ellipse><path d="M4 5v14c0 1.66 3.58 3 8 3s8-1.34 8-3V5"></path><path d="M4 12c0 1.66 3.58 3 8 3s8-1.34 8-3"></path></svg>
+              <div style="font:600 10.5px/1.3 'JetBrains Mono',monospace;color:var(--muted);margin-top:6px">tenant2</div>
+            </div>
+            <div style="border:1px solid var(--line);border-radius:10px;padding:11px 9px;text-align:center;opacity:.55">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--muted)" stroke-width="1.8" style="margin:0 auto"><ellipse cx="12" cy="5" rx="8" ry="3"></ellipse><path d="M4 5v14c0 1.66 3.58 3 8 3s8-1.34 8-3V5"></path><path d="M4 12c0 1.66 3.58 3 8 3s8-1.34 8-3"></path></svg>
+              <div style="font:600 10.5px/1.3 'JetBrains Mono',monospace;color:var(--muted);margin-top:6px">alias1</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <div style="max-width:880px;margin:0 auto;padding:0 40px">
+
+      <!-- FEATURES -->
+      <section id="features" style="padding:62px 0 8px">
+        <div style="font:600 11px/1 'JetBrains Mono',monospace;letter-spacing:.16em;text-transform:uppercase;color:var(--brand)">01 — Key features</div>
+        <h2 style="font-family:'Space Grotesk',sans-serif;font-weight:600;font-size:31px;letter-spacing:-.015em;color:var(--ink);margin:12px 0 0">Small surface, the essentials covered</h2>
+        <div data-feat style="display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-top:28px">
+          <div style="background:var(--paper);border:1px solid var(--line);border-radius:14px;padding:22px">
+            <div style="width:13px;height:13px;background:var(--brand);margin-bottom:16px"></div>
+            <h3 style="font-family:'Space Grotesk',sans-serif;font-weight:600;font-size:17px;color:var(--ink);margin:0 0 7px">Dependency injection</h3>
+            <p style="font-size:14px;line-height:1.6;color:var(--ink-2);margin:0">Drop it into ASP.NET Core with a handful of <code style="font-family:'JetBrains Mono',monospace;font-size:12.5px;color:var(--brand)">AddSingleton</code> registrations.</p>
+          </div>
+          <div style="background:var(--paper);border:1px solid var(--line);border-radius:14px;padding:22px">
+            <div style="width:13px;height:13px;background:var(--gold);margin-bottom:16px"></div>
+            <h3 style="font-family:'Space Grotesk',sans-serif;font-weight:600;font-size:17px;color:var(--ink);margin:0 0 7px">Flexible configuration</h3>
+            <p style="font-size:14px;line-height:1.6;color:var(--ink-2);margin:0">Read tenant information from <code style="font-family:'JetBrains Mono',monospace;font-size:12.5px;color:var(--brand)">appsettings.json</code> or fetch it over HTTP.</p>
+          </div>
+          <div style="background:var(--paper);border:1px solid var(--line);border-radius:14px;padding:22px">
+            <div style="width:13px;height:13px;background:var(--green);margin-bottom:16px"></div>
+            <h3 style="font-family:'Space Grotesk',sans-serif;font-weight:600;font-size:17px;color:var(--ink);margin:0 0 7px">Dynamic resolution</h3>
+            <p style="font-size:14px;line-height:1.6;color:var(--ink-2);margin:0">Resolve tenant-specific connection strings at request time, or pre-resolve them all.</p>
+          </div>
+        </div>
+      </section>
+
+      <!-- HOW IT WORKS -->
+      <section id="how" style="padding:56px 0">
+        <div style="font:600 11px/1 'JetBrains Mono',monospace;letter-spacing:.16em;text-transform:uppercase;color:var(--brand)">02 — How it works</div>
+        <h2 style="font-family:'Space Grotesk',sans-serif;font-weight:600;font-size:31px;letter-spacing:-.015em;color:var(--ink);margin:12px 0 0">The naming convention does the routing</h2>
+        <p style="font-size:15.5px;line-height:1.65;color:var(--ink-2);max-width:46em;margin:14px 0 0">Each connection string is keyed by a tenant (or alias) and the app/database type it belongs to. The resolver matches an incoming tenant id against those keys to assemble that tenant's set of connections.</p>
+
+        <div style="background:var(--code);border-radius:14px;padding:30px 26px;margin-top:26px;text-align:center">
+          <div style="font:600 10px/1 'JetBrains Mono',monospace;letter-spacing:.18em;text-transform:uppercase;color:#5e7591;margin-bottom:18px">Connection string key</div>
+          <div style="display:inline-flex;align-items:center;font-family:'JetBrains Mono',monospace;font-weight:600;font-size:clamp(18px,3.4vw,28px);letter-spacing:-.01em">
+            <span style="color:#79b8ff">{tenant/alias}</span><span style="color:#8aa0b6;margin:0 2px">_</span><span style="color:#f0a85c">{name/dbType}</span>
+          </div>
+          <div style="display:flex;justify-content:center;gap:46px;margin-top:14px">
+            <div style="font:500 11px/1 'JetBrains Mono',monospace;color:#79b8ff">tenant id / alias</div>
+            <div style="font:500 11px/1 'JetBrains Mono',monospace;color:#f0a85c">app / database</div>
+          </div>
+          <div style="height:1px;background:#16304a;margin:22px 0 18px"></div>
+          <div style="display:flex;flex-wrap:wrap;gap:9px;justify-content:center">
+            <span style="font-family:'JetBrains Mono',monospace;font-size:12.5px;color:#cdd9e6;background:#102a42;border:1px solid #1d3a56;border-radius:7px;padding:6px 11px">tenant1_app1</span>
+            <span style="font-family:'JetBrains Mono',monospace;font-size:12.5px;color:#cdd9e6;background:#102a42;border:1px solid #1d3a56;border-radius:7px;padding:6px 11px">tenant1_app2</span>
+            <span style="font-family:'JetBrains Mono',monospace;font-size:12.5px;color:#cdd9e6;background:#102a42;border:1px solid #1d3a56;border-radius:7px;padding:6px 11px">alias1_app1</span>
+            <span style="font-family:'JetBrains Mono',monospace;font-size:12.5px;color:#cdd9e6;background:#102a42;border:1px solid #1d3a56;border-radius:7px;padding:6px 11px">tenant2_app1</span>
+          </div>
+        </div>
+
+        <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-top:18px">
+          <div style="border:1px solid var(--line);border-radius:12px;padding:18px">
+            <div style="font:700 13px/1 'JetBrains Mono',monospace;color:var(--brand)">01</div>
+            <p style="font-size:13.5px;line-height:1.55;color:var(--ink-2);margin:9px 0 0">A request arrives carrying a <strong style="color:var(--ink)">tenantId</strong>.</p>
+          </div>
+          <div style="border:1px solid var(--line);border-radius:12px;padding:18px">
+            <div style="font:700 13px/1 'JetBrains Mono',monospace;color:var(--brand)">02</div>
+            <p style="font-size:13.5px;line-height:1.55;color:var(--ink-2);margin:9px 0 0"><strong style="color:var(--ink)">TenantResolver</strong> looks up matching connection-string keys.</p>
+          </div>
+          <div style="border:1px solid var(--line);border-radius:12px;padding:18px">
+            <div style="font:700 13px/1 'JetBrains Mono',monospace;color:var(--brand)">03</div>
+            <p style="font-size:13.5px;line-height:1.55;color:var(--ink-2);margin:9px 0 0">It returns a <strong style="color:var(--ink)">Tenant</strong> exposing <code style="font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--brand)">Connections["app1"]</code>.</p>
+          </div>
+        </div>
+      </section>
+
+      <!-- INSTALL -->
+      <section id="install" style="padding:56px 0;border-top:1px solid var(--line)">
+        <div style="font:600 11px/1 'JetBrains Mono',monospace;letter-spacing:.16em;text-transform:uppercase;color:var(--brand)">03 — Installation</div>
+        <h2 style="font-family:'Space Grotesk',sans-serif;font-weight:600;font-size:31px;letter-spacing:-.015em;color:var(--ink);margin:12px 0 18px">Add the package</h2>
+        <figure style="margin:0;border-radius:12px;overflow:hidden;border:1px solid #16304a;background:var(--code);box-shadow:0 18px 40px -26px rgba(0,40,80,.55)">
+          <figcaption style="display:flex;align-items:center;justify-content:space-between;gap:12px;padding:10px 14px;background:#0e2236;border-bottom:1px solid #16304a">
+            <span style="font:600 11px/1 'JetBrains Mono',monospace;letter-spacing:.12em;text-transform:uppercase;color:#7d97b0">PowerShell</span>
+            <button data-copy style="display:inline-flex;align-items:center;gap:6px;border:1px solid #1d3a56;background:#102a42;color:#9fb6cd;font:600 10.5px/1 'JetBrains Mono',monospace;letter-spacing:.06em;padding:6px 9px;border-radius:7px;cursor:pointer;text-transform:uppercase"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="11" height="11" rx="2"></rect><path d="M5 15V5a2 2 0 0 1 2-2h10"></path></svg><span data-lbl>Copy</span></button>
+          </figcaption>
+          <pre style="margin:0;padding:18px 20px;overflow:auto;font:500 13px/1.7 'JetBrains Mono',monospace;color:#cdd9e6"><code>dotnet add package "TownSuite.MultiTenant" `
+  --source "C:\the\folder\with\the\nuget\package\TownSuite.MultiTenant.nupkg"</code></pre>
+        </figure>
+        <p style="font-size:14px;line-height:1.6;color:var(--ink-2);margin:16px 0 0">Build the project in <strong style="color:var(--ink)">Release</strong> mode to produce the <code style="font-family:'JetBrains Mono',monospace;font-size:12.5px;color:var(--brand)">.nupkg</code> in the <code style="font-family:'JetBrains Mono',monospace;font-size:12.5px;color:var(--brand)">bin</code> folder. Upload it to your NuGet repository, or point a NuGet source at the folder.</p>
+      </section>
+
+      <!-- DI -->
+      <section id="di" style="padding:56px 0;border-top:1px solid var(--line)">
+        <div style="font:600 11px/1 'JetBrains Mono',monospace;letter-spacing:.16em;text-transform:uppercase;color:var(--brand)">04 — Service registration</div>
+        <h2 style="font-family:'Space Grotesk',sans-serif;font-weight:600;font-size:31px;letter-spacing:-.015em;color:var(--ink);margin:12px 0 8px">Wire it up in <code style="font-family:'JetBrains Mono',monospace;font-size:23px;color:var(--brand)">Program.cs</code></h2>
+        <p style="font-size:15px;line-height:1.65;color:var(--ink-2);max-width:46em;margin:0 0 18px">Register the settings, a unique-id retriever, the web client, a config reader, and the resolver.</p>
+        <figure style="margin:0;border-radius:12px;overflow:hidden;border:1px solid #16304a;background:var(--code);box-shadow:0 18px 40px -26px rgba(0,40,80,.55)">
+          <figcaption style="display:flex;align-items:center;justify-content:space-between;gap:12px;padding:10px 14px;background:#0e2236;border-bottom:1px solid #16304a">
+            <span style="font:600 11px/1 'JetBrains Mono',monospace;letter-spacing:.12em;text-transform:uppercase;color:#7d97b0">Program.cs · C#</span>
+            <button data-copy style="display:inline-flex;align-items:center;gap:6px;border:1px solid #1d3a56;background:#102a42;color:#9fb6cd;font:600 10.5px/1 'JetBrains Mono',monospace;letter-spacing:.06em;padding:6px 9px;border-radius:7px;cursor:pointer;text-transform:uppercase"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="11" height="11" rx="2"></rect><path d="M5 15V5a2 2 0 0 1 2-2h10"></path></svg><span data-lbl>Copy</span></button>
+          </figcaption>
+          <pre style="margin:0;padding:18px 20px;overflow:auto;font:500 13px/1.7 'JetBrains Mono',monospace;color:#cdd9e6"><code>services.AddSingleton&lt;TownSuite.MultiTenant.Settings&gt;(s =&gt;
+    s.GetService&lt;IConfiguration&gt;()
+     .GetSection("TenantSettings")
+     .Get&lt;Settings&gt;());
+
+services.AddSingleton&lt;IUniqueIdRetriever, SqlUniqueIdRetriever&gt;();
+
+services.AddSingleton&lt;TsWebClient&gt;(s =&gt;
+{
+    var config = s.GetService&lt;TownSuite.MultiTenant.Settings&gt;();
+    return new TsWebClient(new HttpClient(), userAgent: config.UserAgent);
+});
+
+services.AddSingleton&lt;IConfigReader, HttpConfigReader&gt;();
+services.AddSingleton&lt;TenantResolver&gt;();</code></pre>
+        </figure>
+      </section>
+
+      <!-- CONFIG -->
+      <section id="config" style="padding:56px 0;border-top:1px solid var(--line)">
+        <div style="font:600 11px/1 'JetBrains Mono',monospace;letter-spacing:.16em;text-transform:uppercase;color:var(--brand)">05 — Configuration</div>
+        <h2 style="font-family:'Space Grotesk',sans-serif;font-weight:600;font-size:31px;letter-spacing:-.015em;color:var(--ink);margin:12px 0 6px">Two ways to read tenants</h2>
+        <p style="font-size:15px;line-height:1.65;color:var(--ink-2);max-width:46em;margin:0 0 20px">Pick a config reader: read everything from <code style="font-family:'JetBrains Mono',monospace;font-size:12.5px;color:var(--brand)">appsettings.json</code>, or fetch tenants from an HTTP service.</p>
+
+        <div data-tabs>
+          <div role="tablist" style="display:flex;gap:4px;border-bottom:1px solid var(--line);margin-bottom:18px">
+            <button data-tab="0" style="background:none;border:none;border-bottom:2px solid transparent;padding:10px 4px;margin-right:18px;font-family:'IBM Plex Sans',sans-serif;font-size:14px;font-weight:500;color:#8a93a3;cursor:pointer">AppSettings reader</button>
+            <button data-tab="1" style="background:none;border:none;border-bottom:2px solid transparent;padding:10px 4px;font-family:'IBM Plex Sans',sans-serif;font-size:14px;font-weight:500;color:#8a93a3;cursor:pointer">HTTP reader</button>
+          </div>
+
+          <div data-panel="0">
+            <p style="font-size:14px;line-height:1.6;color:var(--ink-2);margin:0 0 14px">Connection strings live under <code style="font-family:'JetBrains Mono',monospace;font-size:12.5px;color:var(--brand)">ConnectionStrings</code>; tenant settings under <code style="font-family:'JetBrains Mono',monospace;font-size:12.5px;color:var(--brand)">TenantSettings</code>. The AppSettings reader supports a single record in <code style="font-family:'JetBrains Mono',monospace;font-size:12.5px;color:var(--brand)">ConfigPairs</code>.</p>
+            <figure style="margin:0;border-radius:12px;overflow:hidden;border:1px solid #16304a;background:var(--code);box-shadow:0 18px 40px -26px rgba(0,40,80,.55)">
+              <figcaption style="display:flex;align-items:center;justify-content:space-between;gap:12px;padding:10px 14px;background:#0e2236;border-bottom:1px solid #16304a">
+                <span style="font:600 11px/1 'JetBrains Mono',monospace;letter-spacing:.12em;text-transform:uppercase;color:#7d97b0">appsettings.json</span>
+                <button data-copy style="display:inline-flex;align-items:center;gap:6px;border:1px solid #1d3a56;background:#102a42;color:#9fb6cd;font:600 10.5px/1 'JetBrains Mono',monospace;letter-spacing:.06em;padding:6px 9px;border-radius:7px;cursor:pointer;text-transform:uppercase"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="11" height="11" rx="2"></rect><path d="M5 15V5a2 2 0 0 1 2-2h10"></path></svg><span data-lbl>Copy</span></button>
+              </figcaption>
+              <pre style="margin:0;padding:18px 20px;overflow:auto;font:500 13px/1.7 'JetBrains Mono',monospace;color:#cdd9e6"><code>{
+  "ConnectionStrings": {
+    "tenant1_app1": "Server=tcp:myserver...;Initial Catalog=mydatabase1;User ID=myuser;Password=...;Encrypt=True;",
+    "alias1_app1":  "Server=tcp:myserver...;Initial Catalog=mydatabase1;User ID=myuser;Password=...;Encrypt=True;",
+    "tenant1_app2": "Server=tcp:myserver...;Initial Catalog=second1;User ID=myuser;Password=...;Encrypt=True;",
+    "tenant2_app1": "Server=tcp:myserver...;Initial Catalog=mydatabase2;User ID=myuser;Password=...;Encrypt=True;"
+  },
+  "TenantSettings": {
+    // AppSettingsConfigReader supports only one record in ConfigPairs
+    "ConfigPairs": [
+      {
+        "Id": 1,
+        "DecryptionKey": "PLACEHOLDER",
+        "UniqueIdDbPattern": ".*_Web",
+        "SqlUniqueIdLookup": "SELECT TOP 1 Id FROM ExampleTable"
+      }
+    ],
+    "UserAgent": "TownSuite-MultiTenant-Console Mozilla/5.0 ..."
+  }
+}</code></pre>
+            </figure>
+          </div>
+
+          <div data-panel="1" style="display:none">
+            <p style="font-size:14px;line-height:1.6;color:var(--ink-2);margin:0 0 14px">Point <code style="font-family:'JetBrains Mono',monospace;font-size:12.5px;color:var(--brand)">ConfigReaderUrls</code> at a service that returns the tenant array (see Data formats). Authenticate with a bearer token if needed.</p>
+            <figure style="margin:0;border-radius:12px;overflow:hidden;border:1px solid #16304a;background:var(--code);box-shadow:0 18px 40px -26px rgba(0,40,80,.55)">
+              <figcaption style="display:flex;align-items:center;justify-content:space-between;gap:12px;padding:10px 14px;background:#0e2236;border-bottom:1px solid #16304a">
+                <span style="font:600 11px/1 'JetBrains Mono',monospace;letter-spacing:.12em;text-transform:uppercase;color:#7d97b0">appsettings.json · TenantSettings</span>
+                <button data-copy style="display:inline-flex;align-items:center;gap:6px;border:1px solid #1d3a56;background:#102a42;color:#9fb6cd;font:600 10.5px/1 'JetBrains Mono',monospace;letter-spacing:.06em;padding:6px 9px;border-radius:7px;cursor:pointer;text-transform:uppercase"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="11" height="11" rx="2"></rect><path d="M5 15V5a2 2 0 0 1 2-2h10"></path></svg><span data-lbl>Copy</span></button>
+              </figcaption>
+              <pre style="margin:0;padding:18px 20px;overflow:auto;font:500 13px/1.7 'JetBrains Mono',monospace;color:#cdd9e6"><code>"TenantSettings": {
+  "ConfigPairs": [
+    {
+      "Id": 1,
+      "ConfigReaderUrls": [
+        "http://localhost:5000/api/ConfigReader"
+      ],
+      "ConfigReaderUrlBearerToken": "PLACEHOLDER",
+      "DecryptionKey": "PLACEHOLDER",
+      "UniqueIdDbPattern": ".*_Web",
+      "SqlUniqueIdLookup": "SELECT TOP 1 Id FROM ExampleTable"
+    }
+  ],
+  "UserAgent": "TownSuite-MultiTenant-Console Mozilla/5.0 ..."
+}</code></pre>
+            </figure>
+          </div>
+        </div>
+
+        <div style="display:flex;gap:13px;align-items:flex-start;background:var(--paper-2);border:1px solid var(--line);border-left:3px solid var(--gold);border-radius:10px;padding:15px 17px;margin-top:18px">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--gold)" stroke-width="2" style="flex:none;margin-top:1px"><circle cx="12" cy="12" r="9"></circle><path d="M12 8h.01M11 12h1v4h1"></path></svg>
+          <p style="font-size:13.5px;line-height:1.6;color:var(--ink-2);margin:0"><code style="font-family:'JetBrains Mono',monospace;font-size:12.5px;color:var(--ink)">UniqueIdDbPattern</code> is matched against <code style="font-family:'JetBrains Mono',monospace;font-size:12.5px;color:var(--ink)">{tenant/alias}</code>. The current implementation assumes a tenant's unique id is stored in one of its databases and read via <code style="font-family:'JetBrains Mono',monospace;font-size:12.5px;color:var(--ink)">SqlUniqueIdLookup</code>.</p>
+        </div>
+      </section>
+
+      <!-- EXAMPLES -->
+      <section id="examples" style="padding:56px 0;border-top:1px solid var(--line)">
+        <div style="font:600 11px/1 'JetBrains Mono',monospace;letter-spacing:.16em;text-transform:uppercase;color:var(--brand)">06 — Usage examples</div>
+        <h2 style="font-family:'Space Grotesk',sans-serif;font-weight:600;font-size:31px;letter-spacing:-.015em;color:var(--ink);margin:12px 0 18px">Resolve, then connect</h2>
+
+        <div data-tabs>
+          <div role="tablist" style="display:flex;gap:4px;border-bottom:1px solid var(--line);margin-bottom:18px">
+            <button data-tab="0" style="background:none;border:none;border-bottom:2px solid transparent;padding:10px 4px;margin-right:18px;font-family:'IBM Plex Sans',sans-serif;font-size:14px;font-weight:500;color:#8a93a3;cursor:pointer">ASP.NET Core controller</button>
+            <button data-tab="1" style="background:none;border:none;border-bottom:2px solid transparent;padding:10px 4px;font-family:'IBM Plex Sans',sans-serif;font-size:14px;font-weight:500;color:#8a93a3;cursor:pointer">Worker service</button>
+          </div>
+
+          <div data-panel="0">
+            <p style="font-size:14px;line-height:1.6;color:var(--ink-2);margin:0 0 14px">Inject <code style="font-family:'JetBrains Mono',monospace;font-size:12.5px;color:var(--brand)">TenantResolver</code>, resolve by id, and open a connection for the app you need.</p>
+            <figure style="margin:0;border-radius:12px;overflow:hidden;border:1px solid #16304a;background:var(--code);box-shadow:0 18px 40px -26px rgba(0,40,80,.55)">
+              <figcaption style="display:flex;align-items:center;justify-content:space-between;gap:12px;padding:10px 14px;background:#0e2236;border-bottom:1px solid #16304a">
+                <span style="font:600 11px/1 'JetBrains Mono',monospace;letter-spacing:.12em;text-transform:uppercase;color:#7d97b0">ExampleController.cs</span>
+                <button data-copy style="display:inline-flex;align-items:center;gap:6px;border:1px solid #1d3a56;background:#102a42;color:#9fb6cd;font:600 10.5px/1 'JetBrains Mono',monospace;letter-spacing:.06em;padding:6px 9px;border-radius:7px;cursor:pointer;text-transform:uppercase"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="11" height="11" rx="2"></rect><path d="M5 15V5a2 2 0 0 1 2-2h10"></path></svg><span data-lbl>Copy</span></button>
+              </figcaption>
+              <pre style="margin:0;padding:18px 20px;overflow:auto;font:500 13px/1.7 'JetBrains Mono',monospace;color:#cdd9e6"><code>[ApiController]
+[Route("[controller]")]
+public class ExampleController : ControllerBase
+{
+    private readonly TenantResolver _resolver;
+
+    public ExampleController(TenantResolver resolver)
+    {
+        _resolver = resolver;
+    }
+
+    [HttpGet]
+    public async Task&lt;IActionResult&gt; Get(string tenantId)
+    {
+        var tenant = await _resolver.Resolve(tenantId);
+
+        await using var conn = new SqlConnection(tenant.Connections["app1"]);
+        await conn.OpenAsync();
+        var data = await conn.QueryAsync("SELECT * FROM exampleTable2");
+
+        return Ok(data);
+    }
+}</code></pre>
+            </figure>
+          </div>
+
+          <div data-panel="1" style="display:none">
+            <p style="font-size:14px;line-height:1.6;color:var(--ink-2);margin:0 0 14px">Use <code style="font-family:'JetBrains Mono',monospace;font-size:12.5px;color:var(--brand)">ResolveAll()</code> and an extension method to loop every tenant's database on a schedule.</p>
+            <figure style="margin:0 0 14px;border-radius:12px;overflow:hidden;border:1px solid #16304a;background:var(--code);box-shadow:0 18px 40px -26px rgba(0,40,80,.55)">
+              <figcaption style="display:flex;align-items:center;justify-content:space-between;gap:12px;padding:10px 14px;background:#0e2236;border-bottom:1px solid #16304a">
+                <span style="font:600 11px/1 'JetBrains Mono',monospace;letter-spacing:.12em;text-transform:uppercase;color:#7d97b0">TenantExtensions.cs</span>
+                <button data-copy style="display:inline-flex;align-items:center;gap:6px;border:1px solid #1d3a56;background:#102a42;color:#9fb6cd;font:600 10.5px/1 'JetBrains Mono',monospace;letter-spacing:.06em;padding:6px 9px;border-radius:7px;cursor:pointer;text-transform:uppercase"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="11" height="11" rx="2"></rect><path d="M5 15V5a2 2 0 0 1 2-2h10"></path></svg><span data-lbl>Copy</span></button>
+              </figcaption>
+              <pre style="margin:0;padding:18px 20px;overflow:auto;font:500 13px/1.7 'JetBrains Mono',monospace;color:#cdd9e6"><code>public static class TenantExtensions
+{
+    public static DbConnection CreateConnection(this Tenant tenant, string appName)
+        =&gt; new SqlConnection(tenant.Connections[appName]);
+}</code></pre>
+            </figure>
+            <figure style="margin:0;border-radius:12px;overflow:hidden;border:1px solid #16304a;background:var(--code);box-shadow:0 18px 40px -26px rgba(0,40,80,.55)">
+              <figcaption style="display:flex;align-items:center;justify-content:space-between;gap:12px;padding:10px 14px;background:#0e2236;border-bottom:1px solid #16304a">
+                <span style="font:600 11px/1 'JetBrains Mono',monospace;letter-spacing:.12em;text-transform:uppercase;color:#7d97b0">Worker.cs</span>
+                <button data-copy style="display:inline-flex;align-items:center;gap:6px;border:1px solid #1d3a56;background:#102a42;color:#9fb6cd;font:600 10.5px/1 'JetBrains Mono',monospace;letter-spacing:.06em;padding:6px 9px;border-radius:7px;cursor:pointer;text-transform:uppercase"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="11" height="11" rx="2"></rect><path d="M5 15V5a2 2 0 0 1 2-2h10"></path></svg><span data-lbl>Copy</span></button>
+              </figcaption>
+              <pre style="margin:0;padding:18px 20px;overflow:auto;font:500 13px/1.7 'JetBrains Mono',monospace;color:#cdd9e6"><code>public class Worker : BackgroundService
+{
+    private readonly TenantResolver _resolver;
+
+    public Worker(TenantResolver resolver) =&gt; _resolver = resolver;
+
+    protected override async Task ExecuteAsync(CancellationToken stoppingToken)
+    {
+        const int oneHour = 1000 * 60 * 60;
+
+        while (!stoppingToken.IsCancellationRequested)
+        {
+            await _resolver.ResolveAll();
+
+            foreach (var tenant in _resolver.Tenants)
+            {
+                await using var conn = tenant.CreateConnection("app1");
+                await conn.OpenAsync();
+                var data = await conn.QueryAsync("SELECT * FROM exampleTable2");
+            }
+
+            await Task.Delay(oneHour, stoppingToken);
+        }
+    }
+}</code></pre>
+            </figure>
+          </div>
+        </div>
+      </section>
+
+      <!-- FORMATS -->
+      <section id="formats" style="padding:56px 0;border-top:1px solid var(--line)">
+        <div style="font:600 11px/1 'JetBrains Mono',monospace;letter-spacing:.16em;text-transform:uppercase;color:var(--brand)">07 — Data formats</div>
+        <h2 style="font-family:'Space Grotesk',sans-serif;font-weight:600;font-size:31px;letter-spacing:-.015em;color:var(--ink);margin:12px 0 18px">HTTP service response</h2>
+        <p style="font-size:15px;line-height:1.65;color:var(--ink-2);max-width:46em;margin:0 0 18px">When using the HTTP reader, the service must return JSON shaped like this — an array of tenants, each with keyed connection strings.</p>
+        <figure style="margin:0;border-radius:12px;overflow:hidden;border:1px solid #16304a;background:var(--code);box-shadow:0 18px 40px -26px rgba(0,40,80,.55)">
+          <figcaption style="display:flex;align-items:center;justify-content:space-between;gap:12px;padding:10px 14px;background:#0e2236;border-bottom:1px solid #16304a">
+            <span style="font:600 11px/1 'JetBrains Mono',monospace;letter-spacing:.12em;text-transform:uppercase;color:#7d97b0">200 OK · application/json</span>
+            <button data-copy style="display:inline-flex;align-items:center;gap:6px;border:1px solid #1d3a56;background:#102a42;color:#9fb6cd;font:600 10.5px/1 'JetBrains Mono',monospace;letter-spacing:.06em;padding:6px 9px;border-radius:7px;cursor:pointer;text-transform:uppercase"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="11" height="11" rx="2"></rect><path d="M5 15V5a2 2 0 0 1 2-2h10"></path></svg><span data-lbl>Copy</span></button>
+          </figcaption>
+          <pre style="margin:0;padding:18px 20px;overflow:auto;font:500 13px/1.7 'JetBrains Mono',monospace;color:#cdd9e6"><code>[
+  {
+    "tenantId": "tenant1",
+    "connections": [
+      { "key": "app1", "value": "CONNECTIONSTRING PLACEHOLDER" },
+      { "key": "app2", "value": "CONNECTIONSTRING PLACEHOLDER" }
+    ]
+  },
+  {
+    "tenantId": "tenant2",
+    "connections": [
+      { "key": "app1", "value": "CONNECTIONSTRING PLACEHOLDER" },
+      { "key": "app2", "value": "CONNECTIONSTRING PLACEHOLDER" }
+    ]
+  }
+]</code></pre>
+        </figure>
+      </section>
+
+      <!-- ALTERNATIVES -->
+      <section id="alternatives" style="padding:56px 0;border-top:1px solid var(--line)">
+        <div style="font:600 11px/1 'JetBrains Mono',monospace;letter-spacing:.16em;text-transform:uppercase;color:var(--brand)">08 — Alternatives</div>
+        <h2 style="font-family:'Space Grotesk',sans-serif;font-weight:600;font-size:31px;letter-spacing:-.015em;color:var(--ink);margin:12px 0 6px">Fuller-featured options</h2>
+        <p style="font-size:15px;line-height:1.65;color:var(--ink-2);max-width:46em;margin:0 0 22px">TownSuite.MultiTenant is intentionally minimal. If you need more, these libraries are worth a look.</p>
+        <div data-alts style="display:grid;grid-template-columns:repeat(3,1fr);gap:14px">
+          <a href="https://github.com/Finbuckle/Finbuckle.MultiTenant" target="_blank" rel="noopener" style="text-decoration:none;display:block;border:1px solid var(--line);border-radius:13px;padding:20px;background:var(--paper)">
+            <div style="display:flex;align-items:center;justify-content:space-between"><div style="width:11px;height:11px;background:var(--brand)"></div><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="var(--muted)" stroke-width="2"><path d="M7 17L17 7M9 7h8v8"></path></svg></div>
+            <h3 style="font-family:'Space Grotesk',sans-serif;font-weight:600;font-size:16px;color:var(--ink);margin:14px 0 5px">Finbuckle.MultiTenant</h3>
+            <p style="font-size:13px;line-height:1.55;color:var(--muted);margin:0">Full-featured multi-tenancy for ASP.NET Core.</p>
+          </a>
+          <a href="https://github.com/saaskit/saaskit" target="_blank" rel="noopener" style="text-decoration:none;display:block;border:1px solid var(--line);border-radius:13px;padding:20px;background:var(--paper)">
+            <div style="display:flex;align-items:center;justify-content:space-between"><div style="width:11px;height:11px;background:var(--gold)"></div><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="var(--muted)" stroke-width="2"><path d="M7 17L17 7M9 7h8v8"></path></svg></div>
+            <h3 style="font-family:'Space Grotesk',sans-serif;font-weight:600;font-size:16px;color:var(--ink);margin:14px 0 5px">SaasKit</h3>
+            <p style="font-size:13px;line-height:1.55;color:var(--muted);margin:0">Toolkit for building SaaS applications.</p>
+          </a>
+          <a href="https://github.com/OrchardCMS/OrchardCore" target="_blank" rel="noopener" style="text-decoration:none;display:block;border:1px solid var(--line);border-radius:13px;padding:20px;background:var(--paper)">
+            <div style="display:flex;align-items:center;justify-content:space-between"><div style="width:11px;height:11px;background:var(--green)"></div><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="var(--muted)" stroke-width="2"><path d="M7 17L17 7M9 7h8v8"></path></svg></div>
+            <h3 style="font-family:'Space Grotesk',sans-serif;font-weight:600;font-size:16px;color:var(--ink);margin:14px 0 5px">OrchardCore</h3>
+            <p style="font-size:13px;line-height:1.55;color:var(--muted);margin:0">Modular, multi-tenant CMS &amp; framework.</p>
+          </a>
+        </div>
+      </section>
+
+      <!-- FOOTER -->
+      <footer style="padding:34px 0 56px;border-top:1px solid var(--line);display:flex;align-items:center;justify-content:space-between;gap:18px;flex-wrap:wrap">
+        <div style="display:flex;align-items:center;gap:11px">
+          <svg viewBox="0 0 95 95" width="26" height="26" xmlns="http://www.w3.org/2000/svg">
+            <rect x="34.8" y="36" transform="matrix(0.4241 0.9056 -0.9056 0.4241 71.3904 -14.9512)" fill="#00578E" width="25.2" height="25.2"></rect>
+            <rect x="22.2" y="6.6" transform="matrix(0.4241 0.9056 -0.9056 0.4241 37.4551 -20.5025)" fill="#D8E0ED" width="25.2" height="25.2"></rect>
+            <rect x="5" y="50.8" transform="matrix(0.4241 0.9056 -0.9056 0.4241 67.5745 20.6203)" fill="#6B95BE" width="25.2" height="25.2"></rect>
+            <rect x="69.6" y="66.4" transform="matrix(-0.4559 -0.89 0.89 -0.4559 45.963 174.1142)" fill="#E48D1A" width="13.1" height="13.1"></rect>
+            <rect x="86.4" y="59.7" transform="matrix(-0.4258 -0.9048 0.9048 -0.4258 70.867 171.2279)" fill="#2DA343" width="6.8" height="6.8"></rect>
+            <rect x="77.1" y="85.3" transform="matrix(-0.4254 -0.905 0.905 -0.4254 34.5684 199.4388)" fill="#E03A3E" width="6.9" height="6.9"></rect>
+          </svg>
+          <span style="font-size:13px;color:var(--muted)">TownSuite.MultiTenant — MIT License</span>
+        </div>
+        <a href="https://github.com/TownSuite/TownSuite.MultiTenant" target="_blank" rel="noopener" style="font:600 12px/1 'JetBrains Mono',monospace;letter-spacing:.04em;color:var(--brand);text-decoration:none">github.com/TownSuite/TownSuite.MultiTenant →</a>
+      </footer>
+
+    </div>
+  </main>
+</div>

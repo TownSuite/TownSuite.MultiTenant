@@ -1,0 +1,9 @@
+_site/
+.sass-cache/
+.jekyll-cache/
+.jekyll-metadata
+vendor/
+.bundle/
+# Generated locally with a macOS-specific platform list; let CI resolve fresh
+# so the linux runner gets the right native gems.
+Gemfile.lock
