@@ -6,7 +6,7 @@
         <Nullable>enable</Nullable>
         <PackageId>TownSuite.MultiTenant</PackageId>
         <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
-        <Version>26.1.0</Version>
+        <Version>26.2.0</Version>
         <Description>A small dotnet library to assist in single instance applications with multi tenant databases.</Description>
     </PropertyGroup>
 
