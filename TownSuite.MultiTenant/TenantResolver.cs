@@ -1,5 +1,4 @@
 using System.Collections.Concurrent;
-using System.Text.RegularExpressions;
 using Microsoft.Extensions.Logging;
 
 namespace TownSuite.MultiTenant;
@@ -9,10 +8,9 @@ public class TenantResolver
     private readonly ILogger<TenantResolver> _logger;
     private readonly IConfigReader _reader;
 
-    static readonly ConcurrentDictionary<string, Tenant> _tenants =
-        new ConcurrentDictionary<string, Tenant>();
+    private readonly ConcurrentDictionary<string, Tenant> _tenants = new();
 
-    public  ConcurrentDictionary<string, Tenant> Tenants => _tenants;
+    public ConcurrentDictionary<string, Tenant> Tenants => _tenants;
 
     public TenantResolver(ILogger<TenantResolver> logger, IConfigReader reader)
     {
@@ -22,22 +20,17 @@ public class TenantResolver
 
     private void UpdateTenantDictionary(string tenantId, Tenant t)
     {
-        if (_tenants.AddOrUpdate(tenantId, t, (k, o) => t) == null)
-        {
-            _logger.LogWarning($"Failed to add/update TenantResolver for {tenantId}");
-        }
+        _tenants.AddOrUpdate(tenantId, t, (k, o) => t);
     }
 
     Tenant ModifyTenantDictionary(string tenantId, bool reset, Tenant t)
     {
-        if (_tenants.ContainsKey(tenantId) && reset)
+        if (reset && _tenants.TryGetValue(tenantId, out var original))
         {
             // The tenant already exists in the dictionary.
             // If the values are equal nothing has changed
             // and leave it alone.  The ITenant instances
             // are meant to be long lived and not wiped out.
-            var original = _tenants[tenantId];
-
             if (original.Equals(t))
             {
                 t = original;
@@ -60,7 +53,7 @@ public class TenantResolver
             // this must be converted to the unique id.
             // Auto fill in settings for tenant for that unique id.  This avoids the need to also
             // have a duplicated connectionstring with the unique id.
-            var t2 = t.Clone() as Tenant;
+            var t2 = (Tenant)t.Clone();
             t2.Aliases.Add(t2.UniqueId);
             UpdateTenantDictionary(t2.UniqueId, t2);
         }
@@ -68,57 +61,53 @@ public class TenantResolver
         return t;
     }
 
-    public async Task<Tenant> ResolveAsync(string tenantId, bool reset = false)
+    public async Task<Tenant> ResolveAsync(string tenantId, bool reset = false,
+        CancellationToken cancellationToken = default)
     {
         if (string.IsNullOrWhiteSpace(tenantId))
         {
             return null;
         }
 
-        if (reset == false && _tenants.TryGetValue(tenantId, out var async))
+        if (reset == false && _tenants.TryGetValue(tenantId, out var cached))
         {
-            return async;
+            return cached;
         }
 
-        if (!_reader.IsSetup())
-        {
-            await _reader.Refresh();
-        }
+        await _reader.EnsureLoadedAsync(cancellationToken).ConfigureAwait(false);
 
         return SetupTenant(tenantId, reset);
     }
 
     private Tenant SetupTenant(string tenantId, bool reset)
     {
-        var connections = _reader.GetConnections(tenantId).OrderBy(p=> p.Name);
+        var connections = _reader.GetConnections(tenantId).OrderBy(p => p.Name);
 
         var t = new Tenant(tenantId);
-        if (connections != null)
+        foreach (var connection in connections)
         {
-            foreach (var connection in connections)
+            if (!t.Connections.ContainsKey(connection.Name))
             {
-                if (!t.Connections.ContainsKey(connection.Name))
-                {
-                    t.Connections.Add(connection.Name, connection.ConnStr);
-                }
+                t.Connections.Add(connection.Name, connection.ConnStr);
+            }
 
-                string alias = connection.Name.Split("_")[0];
-                if (!t.Aliases.Contains(alias))
-                {
-                    t.Aliases.Add(alias);
-                }
+            string alias = connection.Name.Split("_")[0];
+            if (!t.Aliases.Contains(alias))
+            {
+                t.Aliases.Add(alias);
             }
         }
 
         if (!t.Connections.Any())
         {
             _logger?.LogCritical(
-                $"Tenant {t.UniqueId} has no connection strings.  Review the appsettings.json/environment variables.");
+                "Tenant {TenantId} has no connection strings.  Review the appsettings.json/environment variables.",
+                t.UniqueId);
 
             return t;
         }
 
-        return ModifyTenantDictionary(tenantId, reset, t) as Tenant;
+        return ModifyTenantDictionary(tenantId, reset, t);
     }
 
     public Tenant Resolve(string tenantId)
@@ -136,30 +125,27 @@ public class TenantResolver
         return SetupTenant(tenantId, reset: false);
     }
 
-    public async Task ResolveAll()
+    public async Task ResolveAll(CancellationToken cancellationToken = default)
     {
-        if (!_reader.IsSetup())
-        {
-            await _reader.Refresh();
-        }
+        await _reader.EnsureLoadedAsync(cancellationToken).ConfigureAwait(false);
 
         foreach (var uniqueId in _reader.GetTenantIds())
         {
             try
             {
-                await ResolveAsync(uniqueId, reset: true);
+                await ResolveAsync(uniqueId, reset: true, cancellationToken).ConfigureAwait(false);
             }
             catch (Exception ex)
             {
                 // Log invalid tenants as a critical error but let the program continue with valid tenants.
-                _logger.LogCritical(ex, $"Failed to retrieve resolve tenant {uniqueId}");
+                _logger.LogCritical(ex, "Failed to retrieve resolve tenant {TenantId}", uniqueId);
             }
         }
     }
 
     public void Clear()
     {
-        _tenants?.Clear();
+        _tenants.Clear();
         _reader?.Clear();
     }
 }

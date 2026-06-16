@@ -1,8 +1,6 @@
-using System.Data.Common;
-
 namespace TownSuite.MultiTenant;
 
-public class Tenant : ICloneable
+public class Tenant : ICloneable, IEquatable<Tenant>
 {
     public Tenant(string uniqueId)
     {
@@ -16,45 +14,69 @@ public class Tenant : ICloneable
 
     public object Clone()
     {
+        // Deep copy the collections so mutations to the clone (e.g. adding an
+        // alias) do not leak back into the original instance.
         return new Tenant(UniqueId)
         {
-            Aliases = this.Aliases,
-            Connections = this.Connections,
+            Aliases = new List<string>(this.Aliases),
+            Connections = new Dictionary<string, string>(this.Connections),
         };
     }
 
-    public bool Equals(Tenant obj)
+    /// <summary>
+    /// Two tenants are considered equal when they share the same UniqueId and
+    /// the exact same set of connection strings. Aliases are intentionally not
+    /// part of equality: they are derived values that may differ between an
+    /// alias-keyed clone and a freshly resolved tenant.
+    /// </summary>
+    public bool Equals(Tenant other)
     {
-        if ((obj is Tenant) == false)
+        if (other is null)
         {
             return false;
         }
 
-        var other = obj as Tenant;
+        if (ReferenceEquals(this, other))
+        {
+            return true;
+        }
 
-        if (other == null)
+        if (!string.Equals(other.UniqueId, UniqueId))
         {
             return false;
         }
 
-        if (string.Equals(other.UniqueId, UniqueId) == false)
+        if (Connections.Count != other.Connections.Count)
         {
             return false;
         }
 
         foreach (var item in Connections)
         {
-            if (other.Connections.ContainsKey(item.Key) == false)
+            if (!other.Connections.TryGetValue(item.Key, out var otherValue))
             {
                 return false;
             }
 
-            if (string.Equals(other.Connections[item.Key], item.Value) == false)
+            if (!string.Equals(otherValue, item.Value))
             {
                 return false;
             }
         }
 
         return true;
+    }
+
+    public override bool Equals(object obj)
+    {
+        return Equals(obj as Tenant);
+    }
+
+    public override int GetHashCode()
+    {
+        // Only UniqueId participates so the hash code stays stable even as the
+        // (mutable) connection collection is populated. Equality still does the
+        // full connection comparison.
+        return UniqueId?.GetHashCode() ?? 0;
     }
 }

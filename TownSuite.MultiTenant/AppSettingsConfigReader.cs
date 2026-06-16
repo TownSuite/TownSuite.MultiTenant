@@ -1,5 +1,4 @@
 using System.Collections.Concurrent;
-using System.Text.RegularExpressions;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 
@@ -7,10 +6,10 @@ namespace TownSuite.MultiTenant;
 
 public class AppSettingsConfigReader : ConfigReader
 {
-    private readonly Microsoft.Extensions.Configuration.IConfiguration _configuration;
+    private readonly IConfiguration _configuration;
     private readonly ILogger<AppSettingsConfigReader> _logger;
 
-    public AppSettingsConfigReader(Microsoft.Extensions.Configuration.IConfiguration configuration,
+    public AppSettingsConfigReader(IConfiguration configuration,
         ILogger<AppSettingsConfigReader> logger, IUniqueIdRetriever uniqueIdRetriever,
         Settings settings) : base(uniqueIdRetriever, settings)
     {
@@ -18,20 +17,10 @@ public class AppSettingsConfigReader : ConfigReader
         _logger = logger;
     }
 
-    public override string GetConnection(string tenant, string appType)
-    {
-        var connectionString = _connections[tenant]
-            .FirstOrDefault(p => string.Equals(p.Name.Split("_").LastOrDefault(), appType,
-                StringComparison.InvariantCultureIgnoreCase))?.ConnStr;
-
-        return connectionString ?? "";
-    }
-
     /// <summary>
-    /// The Refresh method will load the data.   This should be called by middleware on startup and can be called manually if needed.
-    /// This method should be called before the GetConnection method is called.
+    /// Loads tenant data from the ConnectionStrings section of configuration.
     /// </summary>
-    public override async Task Refresh()
+    protected override async Task LoadConnectionsAsync(CancellationToken cancellationToken)
     {
         var connections = _configuration.GetSection("ConnectionStrings").GetChildren();
         _connections = new ConcurrentDictionary<string, IList<ConnectionStrings>>();
@@ -47,22 +36,21 @@ public class AppSettingsConfigReader : ConfigReader
             var con = new ConnectionStrings(firstSettingsRecord.DecryptionKey)
                 { Name = connection.Key, ConnStr = connection.Value };
             conns.Add(con);
-            tasks.Add(InitializeUniqueIds(con, pattern, firstSettingsRecord));
+            tasks.Add(InitializeUniqueIds(con, pattern, firstSettingsRecord, cancellationToken));
         }
 
-        foreach (var task in tasks)
-        {
-            await task;
-        }
+        await Task.WhenAll(tasks).ConfigureAwait(false);
 
-        if (Exceptions.Any())
-        {
-            foreach (var ex in Exceptions)
-            {
-                _logger.LogError(ex.Message, ex);
-            }
-        }
+        LogAndDrainExceptions();
 
         GroupDatabasesByTenant(conns);
+    }
+
+    private void LogAndDrainExceptions()
+    {
+        while (Exceptions.TryTake(out var ex))
+        {
+            _logger.LogError(ex, "Tenant configuration load error: {ErrorMessage}", ex.Message);
+        }
     }
 }

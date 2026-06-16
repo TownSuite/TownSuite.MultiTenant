@@ -1,5 +1,4 @@
 using System.Collections.Concurrent;
-using System.Text.RegularExpressions;
 using Microsoft.Extensions.Logging;
 
 namespace TownSuite.MultiTenant;
@@ -17,33 +16,21 @@ public class HttpConfigReader : ConfigReader
         _logger = logger;
         _webClient = webClient;
     }
-    
-    public override string GetConnection(string tenant, string appType)
-    {
-        var connectionString = _connections[tenant]
-            .FirstOrDefault(p => string.Equals(p.Name.Split("_").LastOrDefault(), appType,
-                StringComparison.InvariantCultureIgnoreCase))?.ConnStr;
-
-        return connectionString ?? "";
-    }
 
     /// <summary>
-    /// The Refresh method will load the data.   This should be called by middleware on startup and can be called manually if needed.
-    /// This method should be called before the GetConnection method is called.
+    /// Loads tenant data from the configured HTTP endpoints.
     /// </summary>
-    public override async Task Refresh()
+    protected override async Task LoadConnectionsAsync(CancellationToken cancellationToken)
     {
-        _connections?.Clear();
         _connections = new ConcurrentDictionary<string, IList<ConnectionStrings>>();
 
         foreach (var configPair in _settings.ConfigPairs)
         {
-            var configReaderUrls = configPair.ConfigReaderUrls;
-      
-            foreach (var configReaderUrl in configReaderUrls)
+            foreach (var configReaderUrl in configPair.ConfigReaderUrls)
             {
-                var tenants = await _webClient.GetAsync(configReaderUrl, configPair.ConfigReaderUrlBearerToken,
-                    System.Threading.CancellationToken.None);
+                var tenants = await _webClient
+                    .GetAsync(configReaderUrl, configPair.ConfigReaderUrlBearerToken, cancellationToken)
+                    .ConfigureAwait(false);
                 var conns = new List<ConnectionStrings>();
 
                 string pattern = configPair.UniqueIdDbPattern;
@@ -56,25 +43,24 @@ public class HttpConfigReader : ConfigReader
                         var con = new ConnectionStrings(configPair.DecryptionKey)
                             { Name = $"{connection.Key}", ConnStr = connection.Value };
                         conns.Add(con);
-                        tasks.Add(InitializeUniqueIds(con, pattern, configPair));
+                        tasks.Add(InitializeUniqueIds(con, pattern, configPair, cancellationToken));
                     }
                 }
 
-                foreach (var task in tasks)
-                {
-                    await task;
-                }
+                await Task.WhenAll(tasks).ConfigureAwait(false);
 
-                if (Exceptions.Any())
-                {
-                    foreach (var ex in Exceptions)
-                    {
-                        _logger.LogError(ex.Message, ex);
-                    }
-                }
+                LogAndDrainExceptions();
 
                 GroupDatabasesByTenant(conns);
             }
+        }
+    }
+
+    private void LogAndDrainExceptions()
+    {
+        while (Exceptions.TryTake(out var ex))
+        {
+            _logger.LogError(ex, "Tenant configuration load error: {ErrorMessage}", ex.Message);
         }
     }
 }

@@ -2,5 +2,6 @@ namespace TownSuite.MultiTenant;
 
 public interface IUniqueIdRetriever
 {
-    Task<string> GetUniqueId(ConnectionStrings con, AppSettingsConfigPairs appSettingsConfigPairs);
+    Task<string> GetUniqueId(ConnectionStrings con, AppSettingsConfigPairs appSettingsConfigPairs,
+        CancellationToken cancellationToken = default);
 }

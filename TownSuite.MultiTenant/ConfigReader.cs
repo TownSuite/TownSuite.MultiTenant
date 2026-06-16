@@ -4,17 +4,25 @@ using System.Text.RegularExpressions;
 namespace TownSuite.MultiTenant;
 
 /// <summary>
-/// Internally the data is only loaded once and then cached across all instances.  The Refresh method will load the data.
-/// This should be called by middleware on startup and can be called manually if needed.
-/// Additionally if the cache should be cleared but not reloaded the Clear method can be called.
+/// Loads and caches tenant connection strings. Data is loaded on demand (or via
+/// an explicit <see cref="Refresh"/>) and cached on the instance. Register the
+/// reader as a singleton to share the cache process-wide.
 /// </summary>
 public abstract class ConfigReader : IConfigReader
 {
-    protected static ConcurrentDictionary<string, IList<ConnectionStrings>> _connections;
+    /// <summary>
+    /// Caps how many tenant unique-id lookups (each opening a SQL connection)
+    /// run at once so a large tenant set cannot exhaust the connection pool.
+    /// </summary>
+    private const int MaxConcurrentUniqueIdLookups = 8;
+
+    protected ConcurrentDictionary<string, IList<ConnectionStrings>> _connections = new();
     private readonly IUniqueIdRetriever _uniqueIdRetriever;
     protected readonly Settings _settings;
+    private readonly SemaphoreSlim _refreshLock = new(1, 1);
+    private readonly SemaphoreSlim _lookupThrottle = new(MaxConcurrentUniqueIdLookups);
 
-    protected List<Exception> Exceptions { get; private set; } = new List<Exception>();
+    protected ConcurrentBag<Exception> Exceptions { get; } = new();
 
     protected ConfigReader(IUniqueIdRetriever uniqueIdRetriever, Settings settings)
     {
@@ -24,34 +32,88 @@ public abstract class ConfigReader : IConfigReader
 
     public IList<ConnectionStrings> GetConnections(string tenant)
     {
-        return _connections[tenant];
+        return _connections.TryGetValue(tenant, out var conns)
+            ? conns
+            : new List<ConnectionStrings>();
     }
 
-    public abstract string GetConnection(string tenant, string appType);
+    public string GetConnection(string tenant, string appType)
+    {
+        if (!_connections.TryGetValue(tenant, out var conns))
+        {
+            return "";
+        }
+
+        return conns
+            .FirstOrDefault(p => string.Equals(p.Name.Split("_").LastOrDefault(), appType,
+                StringComparison.InvariantCultureIgnoreCase))?.ConnStr ?? "";
+    }
 
     /// <summary>
-    /// Internally the data is only loaded once and then cached across all instances.
-    /// The Refresh method will load the data.
-    /// This should be called by middleware on startup and can be called manually if needed.
+    /// Force a full reload of tenant connection data. Concurrent callers are
+    /// serialized so a burst of requests results in a single reload at a time.
     /// </summary>
-    /// <returns>key=UniqueTenantId</returns>
-    public abstract Task Refresh();
-
+    public async Task Refresh(CancellationToken cancellationToken = default)
+    {
+        await _refreshLock.WaitAsync(cancellationToken).ConfigureAwait(false);
+        try
+        {
+            await LoadConnectionsAsync(cancellationToken).ConfigureAwait(false);
+        }
+        finally
+        {
+            _refreshLock.Release();
+        }
+    }
 
     /// <summary>
-    /// The cache should be cleared but not reloaded the Clear method can be called.
+    /// Load tenant data only if nothing is cached yet. Concurrent first-time
+    /// callers coalesce into a single load instead of each triggering a refresh.
+    /// </summary>
+    public async Task EnsureLoadedAsync(CancellationToken cancellationToken = default)
+    {
+        if (IsSetup())
+        {
+            return;
+        }
+
+        await _refreshLock.WaitAsync(cancellationToken).ConfigureAwait(false);
+        try
+        {
+            if (IsSetup())
+            {
+                return;
+            }
+
+            await LoadConnectionsAsync(cancellationToken).ConfigureAwait(false);
+        }
+        finally
+        {
+            _refreshLock.Release();
+        }
+    }
+
+    /// <summary>
+    /// Implementation-specific load of all tenant connection strings into
+    /// <see cref="_connections"/>. Always invoked under the refresh lock.
+    /// </summary>
+    protected abstract Task LoadConnectionsAsync(CancellationToken cancellationToken);
+
+    /// <summary>
+    /// Clear the cache without reloading.
     /// </summary>
     public void Clear()
     {
-        _connections?.Clear();
+        _connections.Clear();
     }
 
     public bool IsSetup()
     {
-        return _connections != null && _connections.Any();
+        return !_connections.IsEmpty;
     }
 
-    protected async Task InitializeUniqueIds(ConnectionStrings con, string pattern, AppSettingsConfigPairs configPairs)
+    protected async Task InitializeUniqueIds(ConnectionStrings con, string pattern, AppSettingsConfigPairs configPairs,
+        CancellationToken cancellationToken = default)
     {
         string? tenant = con.Name.Split("_").FirstOrDefault();
         if (string.IsNullOrWhiteSpace(tenant))
@@ -68,7 +130,17 @@ public abstract class ConfigReader : IConfigReader
 
         try
         {
-            string uniqueId = await _uniqueIdRetriever.GetUniqueId(con, configPairs);
+            await _lookupThrottle.WaitAsync(cancellationToken).ConfigureAwait(false);
+            string uniqueId;
+            try
+            {
+                uniqueId = await _uniqueIdRetriever.GetUniqueId(con, configPairs, cancellationToken)
+                    .ConfigureAwait(false);
+            }
+            finally
+            {
+                _lookupThrottle.Release();
+            }
 
             AddOrUpdateCons(con, uniqueId);
         }
@@ -77,24 +149,23 @@ public abstract class ConfigReader : IConfigReader
             Exceptions.Add(new TownSuiteException($"Failed to resolve and initialize tenant {con.Name}.", ex));
         }
     }
-    
+
     private void AddOrUpdateCons(ConnectionStrings con, string uniqueId)
     {
         _connections.AddOrUpdate(uniqueId,
             addValueFactory: (key) => new List<ConnectionStrings>() { con },
             updateValueFactory: (k, existinglist) =>
             {
-                
-                if (!existinglist.ToArray().Any(p => string.Equals(p.Name, con.Name, StringComparison.InvariantCultureIgnoreCase)))
+                var existing = existinglist.FirstOrDefault(p =>
+                    string.Equals(p.Name, con.Name, StringComparison.InvariantCultureIgnoreCase));
+
+                if (existing == null)
                 {
                     existinglist.Add(con);
                 }
                 else
                 {
-                    var tmp = existinglist.FirstOrDefault(p =>
-                        string.Equals(p.Name, con.Name, StringComparison.InvariantCultureIgnoreCase));
-
-                    tmp.ChangeConnStr(con.ConnStr);
+                    existing.ChangeConnStr(con.ConnStr);
                 }
 
                 return existinglist;

@@ -2,7 +2,8 @@ namespace TownSuite.MultiTenant.Tests;
 
 public class IdFaker : IUniqueIdRetriever
 {
-    public Task<string> GetUniqueId(ConnectionStrings con, AppSettingsConfigPairs configPairs)
+    public Task<string> GetUniqueId(ConnectionStrings con, AppSettingsConfigPairs configPairs,
+        CancellationToken cancellationToken = default)
     {
 
         if (con.Name.StartsWith("a.dns.record"))
