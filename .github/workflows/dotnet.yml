@@ -23,7 +23,7 @@ jobs:
     - name: Build
       run: dotnet build TownSuite.MultiTenant.sln --no-restore -c Release
     - name: Test
-      run: cwd=`pwd` && dotnet test "TownSuite.MultiTenant.Tests" --logger:"trx;LogFileName=$cwd/TownSuite.MultiTenant.Tests/bin/Release/net10.0/nunit-result.trx"
+      run: cwd=`pwd` && dotnet test "TownSuite.MultiTenant.Tests" -c Release --no-build --logger:"trx;LogFileName=$cwd/TownSuite.MultiTenant.Tests/bin/Release/net10.0/nunit-result.trx"
     - name: Archive test results
       uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f  # v6.0.0
       with:
@@ -32,7 +32,7 @@ jobs:
           TownSuite.MultiTenant.Tests/bin/Release/net10.0/nunit-result.trx
         retention-days: 1
     - name: Integration tests (SQL Server via Testcontainers; needs Docker)
-      run: dotnet test "TownSuite.MultiTenant.IntegrationTests" --no-restore -c Release
+      run: dotnet test "TownSuite.MultiTenant.IntegrationTests" -c Release --no-build
     - name: Publish
       run: dotnet publish TownSuite.MultiTenant.Console -c Release -r linux-x64 -p:PublishReadyToRun=true --self-contained true -p:PublishSingleFile=true -p:EnableCompressionInSingleFile=true
     - name: Archive linux artifacts
