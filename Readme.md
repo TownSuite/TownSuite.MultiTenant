@@ -51,6 +51,21 @@ Build the project in Release mode.  It will produce a nuget package in the bin f
 dotnet add package "TownSuite.MultiTenant" --source "C:\the\folder\with\the\nuget\package\TownSuite.MultiTenant.nupkg"
 ```
 
+# Tests
+
+```powershell
+# Fast unit tests (no infrastructure):
+dotnet test TownSuite.MultiTenant.Tests
+
+# Integration tests against a real SQL Server (requires Docker — spins up a
+# container via Testcontainers to validate the decrypt → open → query path):
+dotnet test TownSuite.MultiTenant.IntegrationTests
+
+# Run everything except the Docker-backed integration tests:
+dotnet test --filter Category!=Integration
+```
+
+
 # Data Formats
 
 Connection string tenant naming convention:
@@ -131,7 +146,7 @@ Read tenant information from a appsettings.json file.
         {
             "Id": 1,
             "DecryptionKey": "PLACEHOLDER",
-            "UniqueIdDbPattern": ".*_Web",
+            "UniqueIdPattern": ".*_Web",
             "UniqueIdLookup": "SELECT Top 1 Id FROM ExampleTable"
         }
     ],
@@ -140,7 +155,7 @@ Read tenant information from a appsettings.json file.
 }
 ```
 
-The UniqueIdDbPattern will be used to compare against {tenant/alias}.  The current implementation assummed with the unique id of a tenant is stored in one of the databases. 
+The `UniqueIdPattern` (legacy key `UniqueIdDbPattern` still works) is matched against `{tenant/alias}` to decide which connections carry a tenant's unique id. The reference implementation reads that id from one of the tenant's databases.
 
 
 ### asp.net core example reading settings from appsetting.json
@@ -192,7 +207,7 @@ Settings that are required to make an http call and read the output
             ],
             "ConfigReaderUrlBearerToken": "PLACEHOLDER",
             "DecryptionKey": "PLACEHOLDER",
-            "UniqueIdDbPattern": ".*_Web",
+            "UniqueIdPattern": ".*_Web",
             "UniqueIdLookup": "SELECT Top 1 Id FROM ExampleTable"
         }
     ],

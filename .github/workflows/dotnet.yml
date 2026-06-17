@@ -31,6 +31,8 @@ jobs:
         path: |
           TownSuite.MultiTenant.Tests/bin/Release/net10.0/nunit-result.trx
         retention-days: 1
+    - name: Integration tests (SQL Server via Testcontainers; needs Docker)
+      run: dotnet test "TownSuite.MultiTenant.IntegrationTests" --no-restore -c Release
     - name: Publish
       run: dotnet publish TownSuite.MultiTenant.Console -c Release -r linux-x64 -p:PublishReadyToRun=true --self-contained true -p:PublishSingleFile=true -p:EnableCompressionInSingleFile=true
     - name: Archive linux artifacts

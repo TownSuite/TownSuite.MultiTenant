@@ -49,6 +49,12 @@ review the migration notes before upgrading.
   `UniqueIdLookup` delegate / `DelegateUniqueIdRetriever`.
 - `AppSettingsConfigPairs.UniqueIdLookup` (generic) — `SqlUniqueIdLookup` is kept
   as a backward-compatible alias (resolved via `ResolvedUniqueIdLookup`).
+- `AppSettingsConfigPairs.UniqueIdPattern` (generic) — `UniqueIdDbPattern` is kept
+  as a backward-compatible alias (resolved via `ResolvedUniqueIdPattern`).
+- SQL Server integration tests (Testcontainers) covering the real
+  decrypt → resolve → open → query path and the reference `UniqueIdRetriever`.
+  They require Docker and are `Category("Integration")`; the CI Linux job runs
+  them, and `dotnet test --filter Category!=Integration` skips them locally.
 - `LastLoadErrorCount` to distinguish a failed/partial load from "no tenants."
 - Package README and release notes.
 

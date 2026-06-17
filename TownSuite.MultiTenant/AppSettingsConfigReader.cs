@@ -31,7 +31,7 @@ public class AppSettingsConfigReader : ConfigReader
         // The base constructor guarantees at least one config pair.
         var firstSettingsRecord = _settings.ConfigPairs[0];
 
-        string pattern = firstSettingsRecord.UniqueIdDbPattern;
+        string pattern = firstSettingsRecord.ResolvedUniqueIdPattern;
 
         var tasks = new List<Task>();
         foreach (var connection in connections)

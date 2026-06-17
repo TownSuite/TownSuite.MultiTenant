@@ -25,6 +25,20 @@ public class AppSettingsConfigPairs_Tests
     }
 
     [Test]
+    public void ResolvedUniqueIdPattern_PrefersNewKey()
+    {
+        var cfg = new AppSettingsConfigPairs { UniqueIdPattern = ".*_new", UniqueIdDbPattern = ".*_legacy" };
+        Assert.That(cfg.ResolvedUniqueIdPattern, Is.EqualTo(".*_new"));
+    }
+
+    [Test]
+    public void ResolvedUniqueIdPattern_FallsBackToLegacyKey()
+    {
+        var cfg = new AppSettingsConfigPairs { UniqueIdDbPattern = ".*_legacy" };
+        Assert.That(cfg.ResolvedUniqueIdPattern, Is.EqualTo(".*_legacy"));
+    }
+
+    [Test]
     public void LegacyKey_StillBindsFromConfiguration()
     {
         // http_reader_test.json intentionally uses the legacy "SqlUniqueIdLookup" key.

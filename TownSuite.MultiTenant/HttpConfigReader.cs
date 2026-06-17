@@ -36,7 +36,7 @@ public class HttpConfigReader : ConfigReader
                     .GetAsync(configReaderUrl, configPair.ConfigReaderUrlBearerToken, cancellationToken)
                     .ConfigureAwait(false);
 
-                string pattern = configPair.UniqueIdDbPattern;
+                string pattern = configPair.ResolvedUniqueIdPattern;
 
                 // Connections from responses without a TenantId are resolved via
                 // the retriever (legacy path) and grouped by alias afterwards.
