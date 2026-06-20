@@ -6,7 +6,7 @@
         <Nullable>enable</Nullable>
         <PackageId>TownSuite.MultiTenant</PackageId>
         <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
-        <Version>26.2.0</Version>
+        <IsPackable>true</IsPackable>
         <Description>A small dotnet library to assist in single instance applications with multi tenant databases.</Description>
         <PackageReadmeFile>Readme.md</PackageReadmeFile>
         <PackageReleaseNotes>26.2.0 contains breaking changes. The library is now database-agnostic (no Dapper/Microsoft.Data.SqlClient); you supply the unique-id lookup. Tenant collections are read-only, tenants resolve by alias, and the HTTP reader uses the response tenantId and appSettings. See CHANGELOG.md for the full list and migration notes.</PackageReleaseNotes>

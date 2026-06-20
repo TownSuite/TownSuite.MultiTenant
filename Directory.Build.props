@@ -1,0 +1,20 @@
+<Project>
+  <PropertyGroup>
+      <AssemblyVersion>26.2.0</AssemblyVersion>
+      <FileVersion>26.2.0</FileVersion>
+      <Version>26.2.0</Version>
+      <Deterministic>true</Deterministic>
+      <GenerateAssemblyInfo>true</GenerateAssemblyInfo>
+      <Company>TownSuite Municipal Software Inc.</Company>
+      <Product>TownSuite MultiTenant</Product>
+      <Copyright>Copyright © TownSuite Municipal Software Inc. 2026</Copyright>
+      <Description>A small dotnet library to assist in single instance applications with multi tenant databases.</Description>
+      <IsPackable>false</IsPackable>
+  </PropertyGroup>
+   <PropertyGroup Condition=" '$(NUGET_CONFIG_FILE)' != '' ">
+    <RestoreConfigFile>$(NUGET_CONFIG_FILE)</RestoreConfigFile>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(GITHUB_ACTIONS)' == 'true' Or '$(CI)' == 'true'">
+    <ContinuousIntegrationBuild>true</ContinuousIntegrationBuild>
+  </PropertyGroup>
+</Project>
